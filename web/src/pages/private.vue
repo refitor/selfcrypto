@@ -248,6 +248,10 @@ export default {
             // self.$parent.getSelf().httpPost('/api/user/verify', formdata, function(response){
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
                     self.$Message.error('recovery verify for google authenticator failed');
+                    if (response.data['Error'] === 'reload') {
+                        self.reload();
+                        return;
+                    }
                 } else {
                     self.resetModal();
 

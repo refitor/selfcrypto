@@ -15,6 +15,7 @@ import (
 
 const (
 	c_Data_Pass           = "pass"
+	c_Data_Reload         = "reload"
 	c_Data_Pending        = "pending"
 	c_Data_Success        = "successed"
 	c_Error_Denied        = "permission denied"
@@ -121,6 +122,9 @@ func Auth(datas ...string) *Response {
 	auser, err := GetAuthUser(authID, "", "")
 	if err != nil {
 		return wasmResponse(nil, WebError(err, ""))
+	}
+	if auser.SelfPrivate == nil {
+		return wasmResponse(nil, WebError(err, c_Data_Reload))
 	}
 
 	// verify by google

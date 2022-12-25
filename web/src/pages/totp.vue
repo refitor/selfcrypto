@@ -176,6 +176,10 @@ export default {
             // // http
             // self.$parent.getSelf().httpPost('/api/user/verify', formdata, function(response){
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
+                    if (response.data['Error'] === 'reload') {
+                        self.reload();
+                        return;
+                    }
                     self.$Message.error('google authenticator verify failed');
                     self.$parent.getSelf().afterVerify(false, '');
                 } else {
