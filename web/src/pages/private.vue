@@ -24,7 +24,7 @@
                     <div style="margin: 10px;">
                         <h2 style="margin-bottom: 3px;">SelfCrypto</h2>
                         <Button :disabled="hasRegisted" @click="modalMode = 'regist'; popModal = true" type="primary" style="margin: 10px;">Regist</Button>
-                        <Button :disabled ="!hasRegisted" @click="beforeRecover()" type="primary" style="margin: 10px;">Recover</Button>
+                        <Button :disabled ="true" @click="beforeRecover()" type="primary" style="margin: 10px;">Recover</Button>
                         <Button :disabled ="!hasRegisted || web3Key === ''" @click="showEnDecrypt()" type="primary" style="margin: 10px;">Encrypt-Decrypt</Button>
                         <Table border style="margin-top: 8px;" no-data-text="empty key/value list" :columns="items.columns" :data="items.data"></Table>
                     </div>

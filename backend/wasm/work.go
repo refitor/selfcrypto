@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/refitor/libs/rsauth"
 	"github.com/refitor/rslog"
 )
 
@@ -32,7 +31,6 @@ type Server struct {
 func Init() *Server {
 	vserver = newServer()
 	rslog.SetLevel("info")
-	rsauth.InitEmail("your smtp server", "your email", "your smtp password")
 	return vserver
 }
 

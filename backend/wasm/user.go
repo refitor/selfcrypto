@@ -14,10 +14,11 @@ import (
 	"strings"
 	"time"
 
+	"selfcrypto/common/rscrypto"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/ecies"
-	"github.com/refitor/libs/rscrypto"
 	"github.com/refitor/rslog"
 )
 

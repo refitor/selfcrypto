@@ -7,9 +7,10 @@ import (
 	"math/big"
 	"time"
 
+	"selfcrypto/common/rsauth"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/refitor/libs/rsauth"
 	"github.com/refitor/rslog"
 )
 
@@ -89,19 +90,28 @@ func Recover(datas ...string) *Response {
 	if len(datas) < 2 || datas[0] == "" || datas[1] == "" {
 		return wasmResponse(nil, c_Error_InvalidParams)
 	}
-	authID, pushID := datas[0], datas[1]
+	// authID, pushID := datas[0], datas[1]
 
-	// send verify code
-	code := GetRandom(6, true)
-	if err := vserver.SetCacheByTime("recoveryCode-"+authID, code, true, 300, nil); err != nil {
-		return wasmResponse(nil, WebError(err, ""))
-	}
-	if _, err := rsauth.PushByEmail(pushID, "dynamic authorization", "", fmt.Sprintf("[SelfCrypto] code for dynamic authorization: %s", code), nil); err != nil {
-		return wasmResponse(nil, WebError(err, ""))
-	}
+	// TODO: email send by server
+	// // send verify code
+	// code := GetRandom(6, true)
+	// sendCh := make(chan struct{})
+	// if err := vserver.SetCacheByTime("recoveryCode-"+authID, code, true, 300, nil); err != nil {
+	// 	return wasmResponse(nil, WebError(err, ""))
+	// }
+	// if _, err := rsauth.PushByEmail(pushID, "dynamic authorization", "", fmt.Sprintf("[SelfCrypto] code for dynamic authorization: %s", code), func(err error) {
+	// 	if err != nil {
+	// 		rslog.Errorf("email send failed: %s", err.Error())
+	// 	}
+	// 	close(sendCh)
+	// }); err != nil {
+	// 	return wasmResponse(nil, WebError(err, ""))
+	// }
+	// <-sendCh
 
-	// rslog.Debugf("push code to recoverID successed, recoverID: %s, code: %s", pushID, code)
-	vserver.SetCache("pushID-"+authID, pushID, true)
+	// // rslog.Debugf("push code to recoverID successed, recoverID: %s, code: %s", pushID, code)
+	// vserver.SetCache("pushID-"+authID, pushID, true)
+
 	return wasmResponse("successed", "")
 }
 
