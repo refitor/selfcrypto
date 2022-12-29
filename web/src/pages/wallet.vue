@@ -58,7 +58,7 @@ export default {
                 }
             },
 
-            contractAddr: '0x376121939bDa23b8e74FEfEb224bf46E86DFabDb',
+            contractAddr: '0x71CFadB70Ef86Ed2640a36E44122C36cb1011bb8',
             contractABI: [
                 {
                     "inputs": [
@@ -115,6 +115,19 @@ export default {
                     "name": "Regist",
                     "outputs": [],
                     "stateMutability": "payable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "Total",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "registTotal",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
                     "type": "function"
                 }
             ]

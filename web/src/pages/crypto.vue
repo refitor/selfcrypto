@@ -58,7 +58,6 @@
 </template>
 <script>
 import Editor from 'vue2x-ace-editor';
-import Crypt from '../help/crypt';
 import CryptJS from 'crypto-js';
 import Web3 from "web3";
 export default {

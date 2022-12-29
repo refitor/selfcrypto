@@ -24,7 +24,7 @@
                     <div style="margin: 10px;">
                         <h2 style="margin-bottom: 3px;">SelfCrypto</h2>
                         <Button :disabled="hasRegisted" @click="modalMode = 'regist'; popModal = true" type="primary" style="margin: 10px;">Regist</Button>
-                        <Button :disabled ="true" @click="beforeRecover()" type="primary" style="margin: 10px;">Recover</Button>
+                        <Button :disabled ="!hasRegisted" @click="beforeRecover()" type="primary" style="margin: 10px;">Recover</Button>
                         <Button :disabled ="!hasRegisted || web3Key === ''" @click="showEnDecrypt()" type="primary" style="margin: 10px;">Encrypt-Decrypt</Button>
                         <Table border style="margin-top: 8px;" no-data-text="empty key/value list" :columns="items.columns" :data="items.data"></Table>
                     </div>
@@ -51,7 +51,7 @@
 </template>
 <script>
 import Web3 from "web3";
-import Crypt from '../help/crypt';
+import emailjs from '@emailjs/browser';
 import VueQrcode from '@chenfengyuan/vue-qrcode';
 export default {
     components: {
@@ -149,7 +149,7 @@ export default {
             }
             this.popModal = false;
 
-            var newWeb3Key = Crypt.generatekey(32); // TODO: encrypt by wallet
+            var newWeb3Key = this.$parent.getSelf().generatekey(32); // TODO: encrypt by wallet
 
             // http
             // let formdata = new FormData();
@@ -217,10 +217,24 @@ export default {
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
                     self.$Message.error('google authenticator recover failed');
                 } else {
-                    self.$Message.success('email push successed for recovery');
-                    self.resetModal();
-                    self.modalMode = 'verify';
-                    self.popModal = true;
+                    // emailjs
+                    var walletAddress = self.$parent.getSelf().getWalletAddress();
+                    var userName = walletAddress.substring(0, 4) + "..." + walletAddress.substring(walletAddress.length - 4, walletAddress.length);
+                    var templateParams = {
+                        name: userName,
+                        user_email: self.modelKey,
+                        message: "[SelfCrypto] code for dynamic authorization: " + response.data['Data']
+                    };
+                    emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams, 'YOUR_PUBLIC_KEY')
+                    .then((result) => {
+                        console.log('email send by emailjs successed!', result.text);
+                        self.$Message.success('email push successed for recovery');
+                        self.resetModal();
+                        self.modalMode = 'verify';
+                        self.popModal = true;
+                    }, (error) => {
+                        console.log('email send by emailjs failed!...', error.text);
+                    });
                 }
             })
         },

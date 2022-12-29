@@ -12,8 +12,6 @@ import TOTPPanel from './totp.vue';
 import WalletPanel from './wallet.vue';
 import CryptoPanel from './crypto.vue';
 import PrivatePanel from './private.vue';
-import Crypt from '../help/crypt';
-import {secp256k1} from 'secp256k1'
 export default {
     components: {
         TOTPPanel,
@@ -52,7 +50,7 @@ export default {
                 this.connect = true;
                 this.modelAuthID = address;
                 this.walletAddress = address;
-                this.loadRandom = Crypt.generatekey(6);
+                this.loadRandom = this.generatekey(6, false);
                 self.sign(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", this.loadRandom), function(sig) {
                     console.log('sign successed: ', sig)
                     self.loadSignature = sig;
@@ -149,6 +147,16 @@ export default {
             var pub = utils.ecrecover(Web3.utils.hexToBytes(msgHash), v, r, s).toString('hex');
             console.log(pub);
             return pub;
+        },
+        generatekey(num, needNO) {
+            let library = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            if (needNO === true) library = "0123456789";
+            let key = "";
+            for (var i = 0; i < num; i++) {
+                let randomPoz = Math.floor(Math.random() * library.length);
+                key += library.substring(randomPoz, randomPoz + 1);
+            }
+            return key;
         },
         httpGet(url, onResponse, onPanic) {
             this.$axios.get(this.apiPrefix + url)
