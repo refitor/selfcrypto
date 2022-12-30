@@ -16,6 +16,7 @@ import (
 
 	"selfcrypto/common/rscrypto"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/ecies"
 	"github.com/refitor/rslog"
@@ -23,18 +24,17 @@ import (
 
 const (
 	c_name_user   = "user"
-	c_private_pwd = "your private key password"
-	c_private_hex = "your web3 private key format as hex"
+	c_public_hex  = ""                              // optional: The public key that participates in the google dynamic authorization key generation uses the wallet public key by default. If you need to change it, you can recompile and generate selfcrypto.wasm by specifying the private public key. The format is a hexadecimal string.
+	c_backend_pwd = "your password for the backend" // required: The backend password is used to encrypt the backendKey and recoverID stored in the contract, the format is a string of length 32
 )
 
 type AuthUser struct {
-	ActiveTime   time.Time
-	Web3Private  *ecdsa.PrivateKey
-	SelfPrivate  *ecdsa.PrivateKey
-	WalletPublic *ecdsa.PublicKey
+	ActiveTime  time.Time
+	Web3Public  *ecdsa.PublicKey
+	SelfPrivate *ecdsa.PrivateKey
 }
 
-func GetAuthUser(authID, wallet3Public, backendKey string) (*AuthUser, error) {
+func GetAuthUser(authID, web3Public, backendKey string) (*AuthUser, error) {
 	if user, ok := vserver.GetCache(c_name_user+"-"+authID, false, nil).(*AuthUser); ok {
 		user.ActiveTime = time.Now()
 		return user, nil
@@ -48,42 +48,37 @@ func GetAuthUser(authID, wallet3Public, backendKey string) (*AuthUser, error) {
 			if err != nil {
 				return nil, fmt.Errorf("getAuthUser failed at hex.DecodeString, detail: %s", err.Error())
 			}
-			selfPrivateKey, err := crypto.ToECDSA(rscrypto.AesDecryptECB(selfPrivateKeyBuf, []byte(c_private_pwd)))
+			selfPrivateKey, err := crypto.ToECDSA(rscrypto.AesDecryptECB(selfPrivateKeyBuf, []byte(c_backend_pwd)))
 			if err != nil {
 				return nil, fmt.Errorf("getAuthUser failed at crypto.ToECDSA, detail: %s", err.Error())
 			}
 			user.SelfPrivate = selfPrivateKey
 		}
 
-		// handle for web3Private
-		if c_private_hex != "" {
-			web3PrivateBuf, err := hex.DecodeString(c_private_hex)
-			if err != nil {
-				return nil, fmt.Errorf("getAuthUser failed at hex.DecodeString, detail: %s", err.Error())
-			}
-			web3Private, err := crypto.ToECDSA(web3PrivateBuf)
-			if err != nil {
-				return nil, fmt.Errorf("getAuthUser failed at crypto.ToECDSA, detail: %s", err.Error())
-			}
-			user.Web3Private = web3Private
+		// specify the private public key
+		if c_public_hex != "" {
+			web3Public = c_public_hex
 		}
 
-		// // walletPublic: handle for Web3Public
-		// if wallet3Public != "" {
-		// 	// parse publicKey from hex format
-		// 	pubBuf, err := hexutil.Decode("0x04" + wallet3Public)
-		// 	if err != nil {
-		// 		return nil, fmt.Errorf("getAuthUser failed at hexutil.Decode, detail: %s", err.Error())
-		// 	}
-		// 	// publicKey, err := crypto.DecompressPubkey(pubBuf)
-		// 	publicKey, err := crypto.UnmarshalPubkey(pubBuf)
-		// 	if err != nil {
-		// 		return nil, fmt.Errorf("getAuthUser failed at crypto.UnmarshalPubkey, detail: %s", err.Error())
-		// 	}
-		// 	user.WalletPublic = publicKey
-		// }
-		// strPublic := hex.EncodeToString(crypto.CompressPubkey(user.WalletPublic))
-		// rslog.Debugf("regist user successed, %s, %s, %+v", web3Public, strPublic, user)
+		// walletPublic: handle for Web3Public
+		if web3Public != "" {
+			// parse publicKey from hex format
+			if !strings.HasPrefix(web3Public, "0x04") {
+				web3Public = "0x04" + web3Public
+			}
+			pubBuf, err := hexutil.Decode(web3Public)
+			if err != nil {
+				return nil, fmt.Errorf("getAuthUser failed at hexutil.Decode, detail: %s", err.Error())
+			}
+			// publicKey, err := crypto.DecompressPubkey(pubBuf)
+			publicKey, err := crypto.UnmarshalPubkey(pubBuf)
+			if err != nil {
+				return nil, fmt.Errorf("getAuthUser failed at crypto.UnmarshalPubkey, detail: %s", err.Error())
+			}
+			user.Web3Public = publicKey
+		}
+		strPublic := hex.EncodeToString(crypto.CompressPubkey(user.Web3Public))
+		rslog.Debugf("regist user successed, %s, %s, %+v", web3Public, strPublic, user)
 
 		// save to cache
 		vserver.SetCacheByTime(c_name_user+"-"+authID, user, true, 900, func(s string) bool {
@@ -111,7 +106,7 @@ func (p *AuthUser) Init(authID, recoverID string, privateKey *ecdsa.PrivateKey) 
 		p.SelfPrivate = privateKey
 	}
 	// privateKey3 := hexutil.Encode(crypto.FromECDSA(p.SelfPrivate))[2:]
-	selfPrivate3 := hex.EncodeToString(rscrypto.AesEncryptECB(crypto.FromECDSA(p.SelfPrivate), []byte(c_private_pwd)))
+	selfPrivate3 := hex.EncodeToString(rscrypto.AesEncryptECB(crypto.FromECDSA(p.SelfPrivate), []byte(c_backend_pwd)))
 	// rslog.Debugf("Init generate privateKey successed, selfPrivate3: %s", selfPrivate3)
 
 	// // generate publicKey
@@ -125,25 +120,25 @@ func (p *AuthUser) Init(authID, recoverID string, privateKey *ecdsa.PrivateKey) 
 	// 	p.PublicKey = publicKey
 	// }
 
-	// generate backendKey
-	backendKey, sharedErr := p.getKey(&p.Web3Private.PublicKey, nil)
-	if sharedErr != nil {
-		return "", "", sharedErr
-	}
+	// // generate backendKey
+	// backendKey, sharedErr := p.getKey(p.Web3Public, nil)
+	// if sharedErr != nil {
+	// 	return "", "", sharedErr
+	// }
 
 	// recoverID
-	recoverIDBuf := rscrypto.AesEncryptECB([]byte(recoverID), []byte(backendKey))
+	recoverIDBuf := rscrypto.AesEncryptECB([]byte(recoverID), []byte(c_backend_pwd))
 	return base32.StdEncoding.EncodeToString(recoverIDBuf), selfPrivate3, nil
 }
 
 func (p *AuthUser) Reset(authID, pushID, recoverID string) (*AuthUser, error) {
-	// decrypt recoverID by backendKey and verify pushID
-	backendKey, err := p.getKey(&p.Web3Private.PublicKey, nil)
-	if err != nil {
-		return nil, err
-	}
+	// // decrypt recoverID by backendKey and verify pushID
+	// backendKey, err := p.getKey(p.Web3Public, nil)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	recoverIDBuf, _ := base32.StdEncoding.DecodeString(recoverID)
-	decryptedRecoverID := string(rscrypto.AesDecryptECB(recoverIDBuf, []byte(backendKey)))
+	decryptedRecoverID := string(rscrypto.AesDecryptECB(recoverIDBuf, []byte(c_backend_pwd)))
 	if pushID != decryptedRecoverID {
 		return nil, fmt.Errorf("invalid pushID for recovery, pushID: %s, recoverID: %s", pushID, decryptedRecoverID)
 	}
@@ -151,9 +146,8 @@ func (p *AuthUser) Reset(authID, pushID, recoverID string) (*AuthUser, error) {
 	// reset AuthUser
 	resetUser := new(AuthUser)
 	resetUser.ActiveTime = p.ActiveTime
-	resetUser.Web3Private = p.Web3Private
-	resetUser.WalletPublic = p.WalletPublic
-	if _, _, err = resetUser.Init(authID, decryptedRecoverID, p.SelfPrivate); err != nil {
+	resetUser.Web3Public = p.Web3Public
+	if _, _, err := resetUser.Init(authID, decryptedRecoverID, p.SelfPrivate); err != nil {
 		return nil, err
 	}
 
@@ -182,7 +176,7 @@ func (p *AuthUser) HandleCrypto(action, content string) (ret string, retErr erro
 		if err != nil {
 			return "", err
 		}
-		pubKey, err := p.getKey(&p.Web3Private.PublicKey, nil)
+		pubKey, err := p.getKey(p.Web3Public, nil)
 		if err != nil {
 			return "", err
 		}
@@ -204,7 +198,7 @@ func (p *AuthUser) HandleCrypto(action, content string) (ret string, retErr erro
 		if err != nil {
 			return "", fmt.Errorf("decrypt failed at hex.DecodeString, detail: %s", err.Error())
 		}
-		pubKey, err := p.getKey(&p.Web3Private.PublicKey, nil)
+		pubKey, err := p.getKey(p.Web3Public, nil)
 		if err != nil {
 			return "", err
 		}
@@ -233,7 +227,7 @@ func (p *AuthUser) HandleCrypto(action, content string) (ret string, retErr erro
 }
 
 func (p *AuthUser) GetQrcode(authID string) (string, error) {
-	return p.getKey(&p.Web3Private.PublicKey, nil)
+	return p.getKey(p.Web3Public, nil)
 }
 
 func (p *AuthUser) getKey(publicKey *ecdsa.PublicKey, privateKey *ecdsa.PrivateKey) (string, error) {

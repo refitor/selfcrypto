@@ -143,7 +143,7 @@ func Auth(datas ...string) *Response {
 	retMap := make(map[string]interface{}, 0)
 	switch kind {
 	case "google":
-		secret, err := auser.getKey(&auser.Web3Private.PublicKey, nil)
+		secret, err := auser.getKey(auser.Web3Public, nil)
 		if err != nil {
 			verifyErr = err
 			break
