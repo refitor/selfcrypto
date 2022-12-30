@@ -58,7 +58,7 @@ export default {
                 }
             },
 
-            contractAddr: '0x71CFadB70Ef86Ed2640a36E44122C36cb1011bb8',
+            contractAddr: '0xdD53D8e84d93EF7299fAa907794074188B41De1b',
             contractABI: [
                 {
                     "inputs": [
