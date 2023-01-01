@@ -57,13 +57,13 @@ func Load(datas ...string) *Response {
 // @response recoverID: recovery ID encrypted by backend key
 // @response qrcode: QR code for Google Authenticator scanning to add account
 // @response backendKey: encrypted by backend public key
-func Regist(datas ...string) *Response {
+func Register(datas ...string) *Response {
 	if len(datas) < 2 || datas[0] == "" || datas[1] == "" {
 		return wasmResponse(nil, c_Error_InvalidParams)
 	}
 	authID, recoverID := datas[0], datas[1]
 
-	// regist user
+	// register user
 	auser, err := GetAuthUser(authID, "", "")
 	if err != nil {
 		return wasmResponse(nil, WebError(err, ""))

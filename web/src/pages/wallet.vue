@@ -58,7 +58,7 @@ export default {
                 }
             },
 
-            contractAddr: '0xdD53D8e84d93EF7299fAa907794074188B41De1b',
+            contractAddr: '0x76ed6874899fC86D3bfaaabc75942B1Db6209410',
             contractABI: [
                 {
                     "inputs": [
@@ -112,15 +112,25 @@ export default {
                             "type": "bytes"
                         }
                     ],
-                    "name": "Regist",
+                    "name": "Register",
                     "outputs": [],
                     "stateMutability": "payable",
                     "type": "function"
                 },
                 {
                     "inputs": [],
-                    "name": "Total",
+                    "name": "Meta",
                     "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "storeFee",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "nftAddr",
+                            "type": "address"
+                        },
                         {
                             "internalType": "uint256",
                             "name": "registTotal",

@@ -23,7 +23,7 @@
                 <div>
                     <div style="margin: 10px;">
                         <h2 style="margin-bottom: 3px;">SelfCrypto</h2>
-                        <Button :disabled="hasRegisted" @click="modalMode = 'regist'; popModal = true" type="primary" style="margin: 10px;">Regist</Button>
+                        <Button :disabled="hasRegisted" @click="modalMode = 'register'; popModal = true" type="primary" style="margin: 10px;">Regist</Button>
                         <Button :disabled ="!hasRegisted" @click="beforeRecover()" type="primary" style="margin: 10px;">Recover</Button>
                         <Button :disabled ="!hasRegisted || web3Key === ''" @click="showEnDecrypt()" type="primary" style="margin: 10px;">Encrypt-Decrypt</Button>
                         <Table border style="margin-top: 8px;" no-data-text="empty key/value list" :columns="items.columns" :data="items.data"></Table>
@@ -41,7 +41,7 @@
             <Input v-model="modelKey" type="email" :placeholder="placeHolderMap[modalMode].placeholder"><span slot="prepend">{{placeHolderMap[modalMode].name}}</span></Input>
             <!--Input v-if="modalMode === 'verify'" v-model="modelValue" type="text"><span slot="prepend" style="margin-top: 10px;">Value</span></Input-->
             <div style="text-align: center; margin-top: 15px;">
-                <Button v-if="modalMode === 'regist'" type="primary" @click="regist()" style="margin-right: 10px;">Confirm</Button>
+                <Button v-if="modalMode === 'register'" type="primary" @click="register()" style="margin-right: 10px;">Confirm</Button>
                 <Button v-if="modalMode === 'recover'" type="primary" @click="recover()" style="margin-right: 10px;">Confirm</Button>
                 <Button v-if="modalMode === 'verify'" type="primary" @click="afterRecover()" style="margin-right: 10px;">Confirm</Button>
                 <Button @click="popModal = false; modalReadonly = false;">Cancel</Button>
@@ -62,10 +62,10 @@ export default {
         return {
             hideFooter: true,
             popModal: false,
-            modalMode: 'regist',
+            modalMode: 'register',
             placeHolderMap: {
                 'verify': {'name': 'Code', 'placeholder': 'Enter dynamic code...', 'title': 'recovery verify'},
-                'regist': {'name': 'Email', 'placeholder': 'Enter recover email...', 'title': 'user registration'},
+                'register': {'name': 'Email', 'placeholder': 'Enter recover email...', 'title': 'user registration'},
                 'recover': {'name': 'Email', 'placeholder': 'Enter recover email......', 'title': 'backend recovery'}
             },
 
@@ -141,7 +141,7 @@ export default {
             this.modelKey = '';
             this.modelValue = '';
         },
-        regist() {
+        register() {
             var self = this;
             if (this.modelKey === '') {
                 this.$Message.error('encryption name must be non-empty');
@@ -159,10 +159,10 @@ export default {
 
             // wasm
             let response = {};
-            Regist(self.$parent.getSelf().getWalletAddress(), this.modelKey, function(wasmResponse) {
+            Register(self.$parent.getSelf().getWalletAddress(), this.modelKey, function(wasmResponse) {
                 response['data'] = JSON.parse(wasmResponse);
             // // http
-            // self.$parent.getSelf().httpPost('/api/user/regist', formdata, function(response){
+            // self.$parent.getSelf().httpPost('/api/user/register', formdata, function(response){
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
                     self.$Message.error('user registration failed');
                 } else {
@@ -173,7 +173,7 @@ export default {
                     registParams.push(Web3.utils.asciiToHex(recoverID));
                     registParams.push(Web3.utils.asciiToHex(web3Key));
                     registParams.push(Web3.utils.asciiToHex(backendKey));
-                    self.$parent.getSelf().getWallet().Execute("send", "Regist", self.$parent.getSelf().getWalletAddress(), self.storeFee, registParams, function (result) {
+                    self.$parent.getSelf().getWallet().Execute("send", "Register", self.$parent.getSelf().getWalletAddress(), self.storeFee, registParams, function (result) {
                         self.resetModal();
 
                         // TODO: qrcode decode by wallet

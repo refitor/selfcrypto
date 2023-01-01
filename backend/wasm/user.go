@@ -78,7 +78,7 @@ func GetAuthUser(authID, web3Public, backendKey string) (*AuthUser, error) {
 			user.Web3Public = publicKey
 		}
 		strPublic := hex.EncodeToString(crypto.CompressPubkey(user.Web3Public))
-		rslog.Debugf("regist user successed, %s, %s, %+v", web3Public, strPublic, user)
+		rslog.Debugf("register user successed, %s, %s, %+v", web3Public, strPublic, user)
 
 		// save to cache
 		vserver.SetCacheByTime(c_name_user+"-"+authID, user, true, 900, func(s string) bool {
