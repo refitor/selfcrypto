@@ -291,7 +291,8 @@ export default {
             let walletAddr = walletAddress.substring(0, 4) + "..." + walletAddress.substring(walletAddress.length - 4, walletAddress.length);
 
             // to create a URI for a qr code (change totp to hotp if using hotp)
-            this.qrcodeUrl = 'otpauth://totp/selfData:' + walletAddr + '?secret=' + totpKey.replace(/=/g,'');
+            const totpName = 'selfCrypto-' + this.$parent.getSelf().getWallet().network + ':' + walletAddr;
+            this.qrcodeUrl = 'otpauth://totp/' + totpName + '?secret=' + totpKey.replace(/=/g,'');
         },
         pageWidth(){
             var winWidth=0;
