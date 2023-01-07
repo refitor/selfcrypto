@@ -14,7 +14,7 @@ func main() {
 
 	js.Global().Set("Auth", js.FuncOf(wrapWasmFunc(wasm.Auth)))
 	js.Global().Set("Load", js.FuncOf(wrapWasmFunc(wasm.Load)))
-	js.Global().Set("Regist", js.FuncOf(wrapWasmFunc(wasm.Register)))
+	js.Global().Set("Register", js.FuncOf(wrapWasmFunc(wasm.Register)))
 	js.Global().Set("Recover", js.FuncOf(wrapWasmFunc(wasm.Recover)))
 
 	select {}
