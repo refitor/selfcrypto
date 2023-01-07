@@ -58,7 +58,10 @@ export default {
                 }
             },
 
-            contractAddr: '0x76ed6874899fC86D3bfaaabc75942B1Db6209410',
+            contractAddrMap: {
+                'goerli': '0x76ed6874899fC86D3bfaaabc75942B1Db6209410',
+                'mainnet': '0xec04F8Ee0493f3d763AB1624BB6aAcaCD94Ac4C1'
+            },
             contractABI: [
                 {
                     "inputs": [
@@ -236,8 +239,8 @@ export default {
             return this.web3;
         },
         async Execute(executeFunc, methodName, walletAddress, msgValue, params, successed, failed) {
-            console.log(this.contractAddr, this.contractABI, executeFunc, methodName, walletAddress, msgValue, params);
-            const myContract = new this.web3.eth.Contract(this.contractABI, this.contractAddr);
+            console.log(this.contractAddrMap[this.network], this.contractABI, executeFunc, methodName, walletAddress, msgValue, params);
+            const myContract = new this.web3.eth.Contract(this.contractABI, this.contractAddrMap[this.network]);
             let web3Func = myContract.methods[methodName];
 
             let self = this;

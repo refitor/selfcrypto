@@ -6,7 +6,7 @@ SelfCrypto通过合约维护密钥的形式为数据加解密提供去中心化�
 
 1. **goerli: 0x76ed6874899fC86D3bfaaabc75942B1Db6209410**
 
-2. **mainnet: coming soon......**
+2. **mainnet: 0xec04F8Ee0493f3d763AB1624BB6aAcaCD94Ac4C1**
 
 ## 架构
 

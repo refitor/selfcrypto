@@ -129,9 +129,10 @@ export default {
             this.recoverID = recoverID;
             this.web3Key = web3Key;
             this.backendPublic = backendPublic;
+            const contractAddr = this.$parent.getSelf().getWallet().contractAddrMap[this.$parent.getSelf().getWallet().network];
             this.addKV('Wallet', this.$parent.getSelf().getWalletAddress(), true);
-            this.addKV('Contract', this.$parent.getSelf().getWallet().contractAddr, false);
-            console.log('init privatePanel: ', web3Key, backendPublic)
+            this.addKV('Contract', contractAddr, false);
+            console.log('init privatePanel: ', web3Key, backendPublic);
         },
         addKV(k, v, bReset) {
             if (bReset === true) this.items.data = [];
