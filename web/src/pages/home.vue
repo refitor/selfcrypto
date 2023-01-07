@@ -43,6 +43,21 @@ export default {
         getSelf() {
             return this;
         },
+        init() {
+            let self = this;
+            const go = new Go();
+            WebAssembly.instantiateStreaming(fetch("selfcrypto.wasm"), go.importObject)
+            .then(function(result) {
+                console.log('load wasm successed: ', result)
+                go.run(result.instance);
+                self.loadRandom = self.generatekey(6, false);
+                self.sign(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", self.loadRandom), function(sig) {
+                    console.log('sign successed: ', sig)
+                    self.loadSignature = sig;
+                    self.load();
+                })
+            })
+        },
         onAccountChanged(action, network, address) {
             let self = this;
             if (action === 'connect') {
@@ -50,12 +65,13 @@ export default {
                 this.connect = true;
                 this.modelAuthID = address;
                 this.walletAddress = address;
-                this.loadRandom = this.generatekey(6, false);
-                self.sign(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", this.loadRandom), function(sig) {
-                    console.log('sign successed: ', sig)
-                    self.loadSignature = sig;
-                    self.load();
-                })
+                this.init();
+                // this.loadRandom = this.generatekey(6, false);
+                // self.sign(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", this.loadRandom), function(sig) {
+                //     console.log('sign successed: ', sig)
+                //     self.loadSignature = sig;
+                //     self.load();
+                // })
             } else if (action === 'disconnect') {
                 this.network = '';
                 this.connect = false;

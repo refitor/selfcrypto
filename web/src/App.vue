@@ -16,11 +16,6 @@ export default {
             isRouterAlive: true
         }
     },
-    created() {
-        const go = new Go();
-	    WebAssembly.instantiateStreaming(fetch("selfcrypto.wasm"), go.importObject)
-		.then((result) => go.run(result.instance));
-    },
     methods: {
         reload() {
             this.isRouterAlive = false
