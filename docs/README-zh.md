@@ -10,7 +10,7 @@ SelfCrypto通过合约维护密钥的形式为数据加解密提供去中心化�
 
 ## 架构
 
-![/docs/selfcrypto.jpg](/docs/selfcrypto.jpg)
+![/docs/selfcrypto.png](/docs/selfcrypto.png)
 
 > 1. **合约: 负责存储web3密钥和后端私钥, 以及用于重置google动态授权的恢复ID**
 > 2. **钱包：负责与合约交互，每次从合约提取密钥数据，需要动态生成签名由合约校验**
@@ -38,7 +38,7 @@ SelfCrypto通过合约维护密钥的形式为数据加解密提供去中心化�
 
 ## 私有部署
 
-> - **require: git, go, npm, yarn**
+> - **install: git, go, npm, yarn**
 
 > - **1. clone: git clone https://github.com/refitor/selfcrypto.git**
 

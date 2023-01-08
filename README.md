@@ -12,7 +12,7 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 
 ## Architecture
 
-![/docs/selfcrypto-en.jpg](/docs/selfcrypto-en.jpg)
+![/docs/selfcrypto-en.png](/docs/selfcrypto-en.png)
 
 > 1. **Contract: Responsible for storing web3 key and backend private key, and recovery ID for resetting google dynamic authorization**
 > 2. **Wallet: Responsible for interacting with the contract, every time the key data is extracted from the contract, it needs to dynamically generate a signature to be verified by the contract**
@@ -40,7 +40,7 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 
 ## Self-Host
 
-> - **requires: git, go, npm, yarn**
+> - **install: git, go, npm, yarn**
 
 > - **1. clone: git clone https://github.com/refitor/selfcrypto.git**
 
