@@ -58,13 +58,16 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 
 ## Usage
 
-### 1. Regist
+### Network
+The georli test network is only used for encryption and decryption function testing. For official use, please choose the Ethereum main network mainnet
+
+### Register
 Registration is used to initialize the current wallet account inside the contract, and the user needs to enter the recovery ID (email)
 
-### 2. Recovery
+### Recovery
 Recovery is used to reset the backend, you need to enter the received dynamic random verification code
 
-### 3. Encrypt-Decrypt
+### Encrypt-Decrypt
 After the google dynamic authorization is passed, enter the online encryption and decryption page, only the input text data or the uploaded text file is encrypted and decrypted, and the front end and the contract are not stored
 
 [1]: /docs/README-zh.md

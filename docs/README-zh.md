@@ -56,11 +56,14 @@ SelfCrypto通过合约维护密钥的形式为数据加解密提供去中心化�
 
 ## Usage
 
-### 1. Regist
+### Network
+georli测试网仅用于加解密功能测试，正式使用请选择以太坊主网mainnet
+
+### Register
 注册用于在合约内部初始化当前钱包账户，需要用户输入恢复ID(邮箱)
 
-### 2. Recovery
+### Recovery
 恢复用于重置后端，需要输入收到的动态随机验证码
 
-### 3. Encrypt-Decrypt
+### Encrypt-Decrypt
 google动态授权通过后，进入在线加解密页面，仅仅对输入的文本数据或者上传的文本文件进行加解密操作，前后端以及合约都不进行存储
