@@ -10,7 +10,7 @@ SelfCrypto通过合约维护密钥的形式为数据加解密提供去中心化�
 
 ## 架构
 
-![/docs/selfcrypto.jpg](/docs/selfcrypto.png)
+![/docs/selfcrypto.jpg](/docs/selfcrypto.jpg)
 
 > 1. **合约: 负责存储web3密钥和后端私钥, 以及用于重置google动态授权的恢复ID**
 > 2. **钱包：负责与合约交互，每次从合约提取密钥数据，需要动态生成签名由合约校验**
@@ -36,13 +36,31 @@ SelfCrypto通过合约维护密钥的形式为数据加解密提供去中心化�
 > - **密钥: 密钥采用web3合约 + web2动态计算的方式维护，保证钱包账户和后端任何一方都无法单独获取明文**
 > - **数据: 数据采用web3 + web2混合加密的方式由用户自行保管，保证钱包账户和后端任何一方都无法单独获取明文**
 
+## 私有部署
+
+> - **require: git, go, npm, yarn**
+
+> - **1. clone: git clone https://github.com/refitor/selfcrypto.git**
+
+> - **2. contract: 自行通过remix或者其他工具部署即可**
+
+> - **3. website: cd selfcrypto && ./build.sh, website源码将自动构建在selfcrypto目录**
+
+## 注意
+
+> - 官方所有合约地址采用开源版本源码部署，所有地址全部会同步更新在github文档，同时首页也会自动展示，请务必确定地址一致
+
+> - 由于后端部分需要编译为wasm嵌入web, 请务必使用经官方开源版本构建的线上唯一站点: https://refitor.github.io/selfcrypto
+
+> - 需要私有部署的情况: 默认参与动态计算google授权密钥的公钥为用户钱包公钥，并且在执行恢复操作重置google授权后密钥并不会改变，如果需要指定其他公钥或者不希望google授权密钥不发生改变，则需要自行指定公钥私有部署重新构建
+
 ## Usage
 
 ### 1. Regist
-注册用于在合约内部初始化当前钱包账户，需要用户输入恢复ID
+注册用于在合约内部初始化当前钱包账户，需要用户输入恢复ID(邮箱)
 
-### 2. Recover
-恢复用于重置后端，需要输入recoverID收到的加密密文
+### 2. Recovery
+恢复用于重置后端，需要输入收到的动态随机验证码
 
 ### 3. Encrypt-Decrypt
 google动态授权通过后，进入在线加解密页面，仅仅对输入的文本数据或者上传的文本文件进行加解密操作，前后端以及合约都不进行存储

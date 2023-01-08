@@ -12,7 +12,7 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 
 ## Architecture
 
-![/docs/selfcrypto-en.jpg](/docs/selfcrypto-en.png)
+![/docs/selfcrypto-en.jpg](/docs/selfcrypto-en.jpg)
 
 > 1. **Contract: Responsible for storing web3 key and backend private key, and recovery ID for resetting google dynamic authorization**
 > 2. **Wallet: Responsible for interacting with the contract, every time the key data is extracted from the contract, it needs to dynamically generate a signature to be verified by the contract**
@@ -38,15 +38,33 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 > - **Key: The key is maintained by web3 contract + web2 dynamic calculation to ensure that neither the wallet account nor the backend can obtain the plaintext alone**
 > - **Data: The data is kept by the user in the way of web3 + web2 hybrid encryption to ensure that neither the wallet account nor the backend can obtain the plaintext alone**
 
+## Self-Host
+
+> - **requires: git, go, npm, yarn**
+
+> - **1. clone: git clone https://github.com/refitor/selfcrypto.git**
+
+> - **2. contract: Deploy by yourself through remix or other tools**
+
+> - **3. website: cd selfcrypto && ./build.sh, the website source code will be automatically built in the selfcrypto directory**
+
+## Notice
+
+> - All official contract addresses are deployed using the open source version source code. All addresses will be updated synchronously in the github document, and the home page will be automatically displayed at the same time. Please make sure that the addresses are consistent
+
+> - Since the backend part needs to be compiled into wasm and embedded in the web, please be sure to use the only online site built with the official open source version: https://refitor.github.io/selfcrypto
+
+> - Cases that require private deployment: The public key that participates in the dynamic calculation of the google authorization key is the user wallet public key by default, and the key will not change after the recovery operation is performed to reset the google authorization. If you need to specify another public key or not If you hope that the google authorization key will not change, you need to specify the public key and private deployment to rebuild
+
 ## Usage
 
 ### 1. Regist
-Registration is used to initialize the current wallet account inside the contract, requiring the user to enter the recovery ID
+Registration is used to initialize the current wallet account inside the contract, and the user needs to enter the recovery ID (email)
 
-### 2. Recover
-Recovery is used to reset the backend, you need to enter the encrypted ciphertext received by recoverID
+### 2. Recovery
+Recovery is used to reset the backend, you need to enter the received dynamic random verification code
 
 ### 3. Encrypt-Decrypt
-After the google dynamic authorization is passed, enter the online encryption and decryption page, only encrypt and decrypt the input text data or uploaded text files, and neither the front end nor the contract are stored
+After the google dynamic authorization is passed, enter the online encryption and decryption page, only the input text data or the uploaded text file is encrypted and decrypted, and the front end and the contract are not stored
 
 [1]: /docs/README-zh.md
