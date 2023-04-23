@@ -19,7 +19,7 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 > 3. **Dynamic authorization: The dynamic authorization triggered by the front-end is used to ensure that the encryption and decryption must be completed by the front-end and back-end cooperation**
 > 4. **Online encryption and decryption: As an online encryption and decryption tool, it supports users to input or import text data for online encryption and decryption**
 > 5. **Hybrid encryption and decryption: the front-end part is responsible for encrypting and decrypting plaintext, the back-end part processes ciphertext, key separation and double-layer hybrid encryption ensure high security of plaintext data**
-> 5. **Encrypted data hosting: Officially provide ciphertext data hosting in the form of key/value and files, authorized key management, and online visual encryption and decryption services**
+> 6. **Encrypted data hosting: Officially provide ciphertext data hosting in the form of key/value and files, authorized key management, and online visual encryption and decryption services**
 
 ## Requirements
 > - **1. The private key and mnemonic words of the web3 wallet are frequently lost, and huge amounts of funds are stolen, which poses a huge risk**
@@ -55,6 +55,8 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 > - Since the backend part needs to be compiled into wasm and embedded in the web, please be sure to use the only online site built with the official open source version: https://refitor.github.io/selfcrypto
 
 > - Cases that require private deployment: The public key that participates in the dynamic calculation of the google authorization key is the user wallet public key by default, and the key will not change after the recovery operation is performed to reset the google authorization. If you need to specify another public key or not If you hope that the google authorization key will not change, you need to specify the public key and private deployment to rebuild
+
+> - **Since the wallet provider Metamask disables eth_sign by default, selfCrypto cannot trigger the wallet signature by default. You need to turn on the eth_sign switch for the wallet Metamask before it can be used normally. Metamask issue: https://github.com/MetaMask/metamask-mobile/issues /5676, and the eth_sign interface will be deprecated and upgraded to eth_signTypedData after completing compatibility with EIP-712: https://eips.ethereum.org/EIPS/eip-712** 
 
 ## Usage
 
