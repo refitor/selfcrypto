@@ -6,7 +6,7 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 
 ## Contract
 
-1. **goerli: 0x76ed6874899fC86D3bfaaabc75942B1Db6209410**
+1. **goerli: 0x8eD8bC11E8c2EB21Eb8C1507CD7F60B01cAD8f1E**
 
 2. **mainnet: ~0xec04F8Ee0493f3d763AB1624BB6aAcaCD94Ac4C1~**
 
