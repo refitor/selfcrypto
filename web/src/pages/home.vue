@@ -50,8 +50,9 @@ export default {
             .then(function(result) {
                 console.log('load wasm successed: ', result)
                 go.run(result.instance);
-                self.loadRandom = self.generatekey(6, false);
-                self.sign(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", self.loadRandom), function(sig) {
+                self.loadRandom = self.generatekey(32, false);
+                // self.sign(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", self.loadRandom), function(sig) {
+                self.signTypedData(self.loadRandom, function(sig) {
                     console.log('sign successed: ', sig)
                     self.loadSignature = sig;
                     self.load();
@@ -83,7 +84,7 @@ export default {
             let initBackend = function(recoverID, backendKey, web3Key) {
                 // wasm
                 let response = {};
-                Load(self.walletAddress, self.getPublic(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", self.loadRandom), self.loadSignature), backendKey, function(wasmResponse) {
+                Load(self.walletAddress, self.getPublic(self.loadRandom, self.loadSignature), backendKey, function(wasmResponse) {
                     response['data'] = JSON.parse(wasmResponse);
                 // // http
                 // self.httpGet('/api/user/load?authID=' + self.walletAddress + '&backendKey=' + backendKey, function(response) {
@@ -153,16 +154,34 @@ export default {
                 console.log('sign message failed at web3: ', msg, error)
             })
         },
-        getPublic(msgHash, signature) {
-            signature = signature.split('x')[1];
-            var r = new Buffer(signature.substring(0, 64), 'hex')
-            var s = new Buffer(signature.substring(64, 128), 'hex')
-            var v = new Buffer((parseInt(signature.substring(128, 130)) + 27).toString());
-
-            var utils = require('ethereumjs-util');
-            var pub = utils.ecrecover(Web3.utils.hexToBytes(msgHash), v, r, s).toString('hex');
-            console.log(pub);
-            return pub;
+        signTypedData(msg, callback) {
+            var msgParams = [
+                {
+                    type: 'string',
+                    name: 'Message',
+                    value: msg
+                }
+            ]
+            
+            let self = this;
+            let from = this.getWalletAddress();
+            var params = [msgParams, from];
+            var method = 'eth_signTypedData';
+            this.$refs.walletPanel.getWeb3().currentProvider.sendAsync({
+                method,
+                params,
+                from,
+            }, function (err, result) {
+                if (err || result.error) {
+                    self.$Message.error('sign message failed at web3: ', msg, error);
+                    console.log('sign message failed at web3: ', msg, error)
+                    return
+                }
+                if (callback !== null && callback !== undefined) callback(result.result);
+            })
+        },
+        getPublic(msg, signature) {
+            return '0x042791d640dc87f1bf43075f6f205ffb5045adebcbd73b9942cf0a65f8970bbe80d7ffe21f66ea200636d54e927591766d9f53a785e40ef01ae9200332e15b651a';
         },
         generatekey(num, needNO) {
             let library = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
