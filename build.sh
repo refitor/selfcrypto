@@ -4,11 +4,12 @@
 cd ./backend
 go mod init selfcrypto
 go mod tidy
-rm ../web/public/selfcrypto.wasm
-GOOS=js GOARCH=wasm go build -ldflags="-w -s" -o ../web/public/selfcrypto.wasm
+rm ../web3/public/selfcrypto.wasm
+GOOS=js GOARCH=wasm go build -ldflags="-w -s" -o ../web3/public/selfcrypto.wasm
 cd ../
 
 # build web
-cd ./web
+cd ./web3
 yarn install
 yarn run build
+cd ../

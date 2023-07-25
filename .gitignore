@@ -21,4 +21,4 @@ dist/
 vendor/
 selfcrypto/
 node_modules/
-web/public/wasm/selfcrypto.wasm
+web3/public/selfcrypto.wasm
