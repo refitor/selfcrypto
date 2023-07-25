@@ -6,9 +6,9 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 
 ## Contract
 
-1. **goerli: 0x76ed6874899fC86D3bfaaabc75942B1Db6209410**
+1. **goerli: 0x8eD8bC11E8c2EB21Eb8C1507CD7F60B01cAD8f1E**
 
-2. **mainnet: 0xec04F8Ee0493f3d763AB1624BB6aAcaCD94Ac4C1**
+2. **mainnet: ~0xec04F8Ee0493f3d763AB1624BB6aAcaCD94Ac4C1~**
 
 ## Architecture
 
@@ -56,7 +56,7 @@ SelfCrypto provides decentralized key management and private dynamic authorizati
 
 > - Cases that require private deployment: The public key that participates in the dynamic calculation of the google authorization key is the user wallet public key by default, and the key will not change after the recovery operation is performed to reset the google authorization. If you need to specify another public key or not If you hope that the google authorization key will not change, you need to specify the public key and private deployment to rebuild
 
-> - **Since the wallet provider Metamask disables eth_sign by default, selfCrypto cannot trigger the wallet signature by default. You need to turn on the eth_sign switch for the wallet Metamask before it can be used normally. Metamask issue: https://github.com/MetaMask/metamask-mobile/issues /5676, and the eth_sign interface will be deprecated and upgraded to eth_signTypedData after completing compatibility with EIP-712: https://eips.ethereum.org/EIPS/eip-712** 
+> - **Since the wallet provider Metamask disables eth_sign by default, selfCrypto cannot trigger the wallet signature by default. You need to turn on the eth_sign switch for the wallet Metamask before it can be used normally. Metamask issue: https://github.com/MetaMask/metamask-mobile/issues /5676, and the eth_sign interface will be deprecated and upgraded to eth_signTypedData after completing compatibility with EIP-712: https://eips.ethereum.org/EIPS/eip-712， mainnet: After upgrading to EIP-712, it is no longer available, goerli: Support EIP-712, but no longer use the user wallet public key, only use the fixed public key for project demonstration, you can maintain the public key c_public_hex for private deployment: selfcrypto/backend/wasm/user.go** 
 
 ## Usage
 
