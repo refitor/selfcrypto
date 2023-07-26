@@ -19,14 +19,12 @@ import { web3chains, ethereumClient, web3Modal } from '../web3modal.js';
 export default {
     data() {
         return {
-            network: '',
             connected: false,
 
             web3: null,
-
+            networkId: '',
             contractAddrMap: {
-                'goerli': '0x8eD8bC11E8c2EB21Eb8C1507CD7F60B01cAD8f1E',
-                'mainnet': '0xec04F8Ee0493f3d763AB1624BB6aAcaCD94Ac4C1'
+                '5': '0x8eD8bC11E8c2EB21Eb8C1507CD7F60B01cAD8f1E'
             },
             contractABI: [
                 {
@@ -117,43 +115,73 @@ export default {
         ethereumClient.watchAccount(function(account) {
             self.onAccount(account);
         });
-        
         ethereumClient.watchNetwork(function(network) {
             self.onNetwork(network);
         });
     },
     methods: {
         async onAccount(account) {
-            this.walletAddress = account['address'];
-            if (account['address'] === undefined) {
-                this.web3 = null;
-                this.$parent.onAccountChanged('disconnect', this.network, '');
-                return
-            }
-            const provider = account['connector']['options'].getProvider();
-            console.log('wallet connect successed, account: ', account, provider);
+            const walletAddress = account['address'];
+            if (account['address'] !== undefined) {
+                const provider = account['connector']['options'].getProvider();
+                console.log('wallet connect successed: ', account, provider);
+                
+                const web3 = new Web3(provider);
+                const networkId = await web3.eth.net.getId();
+                if (this.contractAddrMap[networkId] === undefined) {
+                    this.$Modal.error({
+                        title: 'unsupport network',
+                        content: 'Currently supported chainId list: ' + Object.keys(this.contractAddrMap),
+                    });
+                    ethereumClient.disconnect();
+                    return;
+                }
+                this.web3 = web3;
+                this.networkId = networkId;
+                this.$parent.onAccountChanged('connect', this.networkId, walletAddress);
 
-            this.web3 = new Web3(provider);
-            this.network = await this.web3.eth.net.getNetworkType();
-            if (this.network === 'main') this.network = 'mainnet';
-            if (this.network === 'private') {
-                this.$Modal.error({
-                    title: 'unsupport network',
-                    content: 'Currently supported chain list: ' + web3chains,
+                // Subscribe to accounts change
+                provider.on("accountsChanged", (accounts) => {
+                    console.log("accountsChanged: ", accounts);
+                    this.web3Reload();
                 });
-                return;
+
+                // Subscribe to chainId change
+                provider.on("chainChanged", (chainId) => {
+                    console.log("chainChanged: ", chainId);
+                    this.web3Reload();
+                });
+
+                // Subscribe to provider disconnection
+                provider.on("disconnect", (error) => {
+                    console.log("disconnect", error);
+                    this.web3Reload();
+                });
+            } else {
+                this.web3 = null;
+                this.networkId = '';
+                this.$parent.onAccountChanged('disconnect', this.networkId, '');
             }
-            this.$parent.onAccountChanged('connect', this.network, this.walletAddress);
         },
         async onNetwork(network) {
-            console.log('wallet.vue: ', network)
+            console.log('wallet.onNetwork: ', network);
+            if (network !== this.networkId && this.networkId !== '') {
+                this.web3 = null;
+                this.networkId = '';
+                this.$parent.onAccountChanged('disconnect', this.networkId, '');
+            }
+        },
+        web3Reload() {
+            this.web3 = null;
+            this.networkId = '';
+            this.$parent.onAccountChanged('switch', this.networkId, '');
         },
         getWeb3() {
             return this.web3;
         },
         async Execute(executeFunc, methodName, walletAddress, msgValue, params, successed, failed) {
-            console.log(this.contractAddrMap[this.network], this.contractABI, executeFunc, methodName, walletAddress, msgValue, params);
-            const myContract = new this.web3.eth.Contract(this.contractABI, this.contractAddrMap[this.network]);
+            console.log(this.contractAddrMap[this.networkId], this.contractABI, executeFunc, methodName, walletAddress, msgValue, params);
+            const myContract = new this.web3.eth.Contract(this.contractABI, this.contractAddrMap[this.networkId]);
             let web3Func = myContract.methods[methodName];
 
             let self = this;

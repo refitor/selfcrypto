@@ -75,6 +75,8 @@ export default {
                 this.network = '';
                 this.connect = false;
                 this.walletAddress = '';
+            } else {
+                window.location.reload();
             }
         },
         load() {
