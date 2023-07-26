@@ -29,6 +29,7 @@ export default {
             showHomePanel: true,
             showPanels: {},
 
+            panelName: '',
             backendPublic: '',
             afterVerifyFunc: null,
 
@@ -125,15 +126,16 @@ export default {
                 // this.reload();
                 return;
             }
+            this.panelName = panelName;
             this.afterVerifyFunc = afterVerifyFunc;
 
             let self = this;
             this.showTOTP = true;
             this.$nextTick(function(){
-                self.$refs.totpPanel.init(action, self.backendPublic, panelName, panelInitParam);
+                self.$refs.totpPanel.init(action, self.backendPublic, panelInitParam);
             });
         },
-        afterVerify(hasVerified, panelName, panelInitParam) {
+        afterVerify(hasVerified, panelInitParam) {
             this.showTOTP = false;
             if (hasVerified === true) {
                 if (this.afterVerifyFunc !== null && this.afterVerifyFunc !== undefined) {
@@ -141,8 +143,8 @@ export default {
                     return;
                 }
                 this.showHomePanel = !this.showHomePanel;
-                this.showPanels[panelName] = true;
-                this.$refs[panelName].init(panelInitParam);
+                this.showPanels[this.panelName] = true;
+                this.$refs[this.panelName].init(panelInitParam);
             }
         },
         signTypedData(msg, callback) {

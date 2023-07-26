@@ -52,7 +52,7 @@
 </template>
 <script>
 import Web3 from "web3";
-import { CryptoJS } from 'crypto-js';
+import CryptoJS from 'crypto-js'
 import emailjs from '@emailjs/browser';
 import VueQrcode from '@chenfengyuan/vue-qrcode';
 export default {
@@ -140,13 +140,16 @@ export default {
             this.web3Key = web3Key;
             this.backendPublic = backendPublic;
             const contractAddr = this.$parent.getSelf().getWallet().contractAddrMap[this.$parent.getSelf().getWallet().network];
-            // this.addKV('Wallet', {'btnName': 'View', 'value': this.$parent.getSelf().getWalletAddress(), 'url': 'https://etherscan.io/token/' + this.$parent.getSelf().getWalletAddress()}, true);
-            // this.addKV('Contract', {'btnName': 'View', 'value': contractAddr, 'url': 'https://etherscan.io/token/' + contractAddr}, false);
-            this.addKV('Encrypt-Decrypt', {'value': this.$parent.getSelf().generatekey(16, false), 'btnName': 'Test'}, false);
+            this.addKV('Wallet', {'btnName': 'View', 'value': this.$parent.getSelf().getWalletAddress(), 'url': 'https://etherscan.io/token/' + this.$parent.getSelf().getWalletAddress()}, true);
+            this.addKV('Contract', {'btnName': 'View', 'value': contractAddr, 'url': 'https://etherscan.io/token/' + contractAddr}, false);
+            // this.addKV('Encrypt-Decrypt', {'value': this.$parent.getSelf().generatekey(16, false), 'btnName': 'Test'}, false);
             console.log('init privatePanel: ', web3Key, backendPublic);
         },
         addKV(k, v, bReset) {
             if (bReset === true) this.items.data = [];
+            if (k === 'Encrypt-Decrypt') {
+                this.items.data.pop(k);
+            }
             this.items.data.push({'key': k, 'value': v['value'], 'data': v});
         },
         resetModal() {
@@ -296,21 +299,22 @@ export default {
             let self = this;
             if (name === 'Encrypt-Decrypt') {
                 // var CryptoJS = require("crypto-js");
-                if (this.hasEnctypted) {
+                if (this.hasEnctypted === false) {
                     var web3Content = CryptoJS.AES.encrypt(params, self.web3Key).toString();
-                    self.$parent.getSelf().switchPanel('encrypt', web3Content, function(encryptedContent) {
+                    self.$parent.getSelf().switchPanel('encrypt', '', web3Content, function(encryptedContent) {
+                        console.log('executeAction successed: ', web3Content, encryptedContent)
                         self.addKV('Encrypt-Decrypt', {'value': encryptedContent, 'btnName': 'Decrypt'}, false);
                         self.hasEncrypted = true;
                     })
                 } else {
-                    self.$parent.getSelf().switchPanel('decrypt', params, function(deryptedContent) {
+                    self.$parent.getSelf().switchPanel('decrypt', '', params, function(deryptedContent) {
                         var content = CryptoJS.AES.decrypt(deryptedContent, self.web3Key).toString(CryptoJS.enc.Utf8);
                         self.addKV('Encrypt-Decrypt', {'value': content, 'btnName': 'Encrypt'}, false);
                         self.hasEncrypted = false;
                     })
                 }
             } else {
-                this.$parent.getSelf().afterVerify(true, name, params);
+                this.$parent.getSelf().afterVerify(true, params);
             }
         },
         showQRcode(totpKey) {
