@@ -93,7 +93,7 @@ export default {
                         self.backendPublic = response.data['Data'];
                         self.$refs.privatePanel.init(recoverID, web3Key, self.backendPublic);
                     } else {
-                        self.$Message.error('selfweb3 load from backend failed: ', + response.data['Data']);
+                        self.$Message.error('selfcrypto load from backend failed: ', + response.data['Data']);
                     }
                 });
             }
