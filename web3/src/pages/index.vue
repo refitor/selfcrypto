@@ -10,6 +10,7 @@ import Web3 from "web3";
 import TOTPPanel from './totp.vue';
 import PrivatePanel from './home.vue';
 import WalletPanel from './wallet.vue';
+import { Web3Storage } from 'web3.storage';
 export default {
     components: {
         TOTPPanel,
@@ -34,7 +35,8 @@ export default {
 
             apiPrefix: '',
             loadRandom: '',
-            loadSignature: ''
+            loadSignature: '',
+            web3Storage: null
         }
     },
     methods: {
@@ -182,6 +184,33 @@ export default {
                 key += library.substring(randomPoz, randomPoz + 1);
             }
             return key;
+        },
+        async storeInit() {
+            this.web3Storage = new Web3Storage({'token': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweERDMDIzOEYxMTNjOTgyNzlCNkU4QzM5NDNkMDk1ODNkNzRDMEY1YmQiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2OTA0NzgwODY2MDUsIm5hbWUiOiJzZWxmY3J5cHRvIn0.0yXXGQsbkz2ra7puQSiFkTLG3YzHDxxFW0fqjle4h4k"});
+        },
+        getFiles(name, data) {
+            // You can create File objects from a Blob of binary data
+            // see: https://developer.mozilla.org/en-US/docs/Web/API/Blob
+            // Here we're just storing a JSON object, but you can store images,
+            // audio, or whatever you want!
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
+            const files = [new File([blob], name)]
+            return files
+        },
+        async storeSet(files) {
+            const cid = await this.web3Storage.put(files);
+            console.log(`stored ${files.length} files. cid: ${cid}`);
+        },
+        async storeGet(storePath) {
+            if (storePath === "") {
+                return await client.list();
+            } else {
+                console.log(`${upload.name} - cid: ${upload.cid} - size: ${upload.dagSize}`)
+                for await (const upload of client.list()) {
+                    console.log(`${upload.name} - cid: ${upload.cid} - size: ${upload.dagSize}`)
+                    if (storePath === upload.name) return upload;
+                }
+            }
         },
         httpGet(url, onResponse, onPanic) {
             this.$axios.get(this.apiPrefix + url)
