@@ -19,7 +19,6 @@ export default {
     inject: ["reload"],
     data() {
         return {
-            network: '',
             connect: false,
             publicKey: '',
             walletAddress: '',
@@ -61,7 +60,6 @@ export default {
         onAccountChanged(action, network, address) {
             let self = this;
             if (action === 'connect') {
-                this.network = network;
                 this.connect = true;
                 this.modelAuthID = address;
                 this.walletAddress = address;
@@ -73,7 +71,6 @@ export default {
                 //     self.load();
                 // })
             } else if (action === 'disconnect') {
-                this.network = '';
                 this.connect = false;
                 this.walletAddress = '';
             } else {

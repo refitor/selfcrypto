@@ -126,7 +126,7 @@ export default {
             backendPublic: '',
             hasRegisted: false,
 
-            hasEnctypted: false
+            hasEncrypted: false
         }
     },
     mounted: function () {
@@ -139,7 +139,7 @@ export default {
             this.recoverID = recoverID;
             this.web3Key = web3Key;
             this.backendPublic = backendPublic;
-            const contractAddr = this.$parent.getSelf().getWallet().contractAddrMap[this.$parent.getSelf().getWallet().network];
+            const contractAddr = this.$parent.getSelf().getWallet().contractAddrMap[this.$parent.getSelf().getWallet().networkId];
             // this.addKV('Wallet', {'btnName': 'View', 'value': this.$parent.getSelf().getWalletAddress(), 'url': 'https://etherscan.io/token/' + this.$parent.getSelf().getWalletAddress()}, true);
             // this.addKV('Contract', {'btnName': 'View', 'value': contractAddr, 'url': 'https://etherscan.io/token/' + contractAddr}, false);
             this.addKV('Encrypt-Decrypt', {'value': this.$parent.getSelf().generatekey(16, false), 'btnName': 'Test'}, false);
@@ -299,7 +299,7 @@ export default {
             let self = this;
             if (name === 'Encrypt-Decrypt') {
                 // var CryptoJS = require("crypto-js");
-                if (this.hasEnctypted === false) {
+                if (this.hasEncrypted === false) {
                     var web3Content = CryptoJS.AES.encrypt(params, self.web3Key).toString();
                     self.$parent.getSelf().switchPanel('encrypt', '', web3Content, function(encryptedContent) {
                         console.log('executeAction successed: ', web3Content, encryptedContent)
@@ -323,7 +323,7 @@ export default {
             let walletAddr = walletAddress.substring(0, 4) + "..." + walletAddress.substring(walletAddress.length - 4, walletAddress.length);
 
             // to create a URI for a qr code (change totp to hotp if using hotp)
-            const totpName = 'selfCrypto-' + this.$parent.getSelf().getWallet().network + ':' + walletAddr;
+            const totpName = 'selfCrypto-' + this.$parent.getSelf().getWallet().networkId + ':' + walletAddr;
             this.qrcodeUrl = 'otpauth://totp/' + totpName + '?secret=' + totpKey.replace(/=/g,'');
         },
         pageWidth(){
