@@ -116,19 +116,20 @@ export default {
         ethereumClient.watchAccount(function(account) {
             self.onAccount(account);
         });
-        ethereumClient.watchNetwork(function(network) {
-            self.onNetwork(network);
-        });
+        // ethereumClient.watchNetwork(function(network) {
+        //     self.onNetwork(network);
+        // });
     },
     methods: {
         async onAccount(account) {
+            let self = this;
             const walletAddress = account['address'];
             if (account['address'] !== undefined) {
                 const provider = account['connector']['options'].getProvider();
-                console.log('wallet connect successed: ', account, provider);
                 
                 const web3 = new Web3(provider);
                 const networkId = await web3.eth.net.getId();
+                console.log('wallet connect successed: ', networkId, account, web3, provider);
                 if (this.contractAddrMap[networkId] === undefined) {
                     this.$Modal.error({
                         title: 'unsupport network',
@@ -142,40 +143,31 @@ export default {
                 this.$parent.onAccountChanged('connect', this.networkId, walletAddress);
 
                 // Subscribe to accounts change
-                provider.on("accountsChanged", (accounts) => {
-                    console.log("accountsChanged: ", accounts);
-                    this.web3Reload();
+                console.log(account['connector'].onAccountsChanged)
+                account['connector'].on("change", (eventParam) => {
+                    console.log("event change: ", eventParam);
+                    self.web3Reload('change');
                 });
 
-                // Subscribe to chainId change
-                provider.on("chainChanged", (chainId) => {
-                    console.log("chainChanged: ", chainId);
-                    this.web3Reload();
+                // Subscribe to account disconnect
+                account['connector'].on("disconnect", (eventParam) => {
+                    console.log("event disconnect: ", eventParam);
+                    self.web3Reload('disconnect');
                 });
 
-                // Subscribe to provider disconnection
-                provider.on("disconnect", (error) => {
-                    console.log("disconnect", error);
-                    this.web3Reload();
+                // Subscribe to account disconnect
+                account['connector'].on("error", (eventParam) => {
+                    console.log("event error: ", eventParam);
+                    self.web3Reload('error');
                 });
             } else {
-                this.web3 = null;
-                this.networkId = '';
-                this.$parent.onAccountChanged('disconnect', this.networkId, '');
+                this.web3Reload('disconnect');
             }
         },
-        async onNetwork(network) {
-            console.log('wallet.onNetwork: ', network);
-            if (network !== this.networkId && this.networkId !== '') {
-                this.web3 = null;
-                this.networkId = '';
-                this.$parent.onAccountChanged('disconnect', this.networkId, '');
-            }
-        },
-        web3Reload() {
+        web3Reload(event) {
             this.web3 = null;
             this.networkId = '';
-            this.$parent.onAccountChanged('switch', this.networkId, '');
+            this.$parent.onAccountChanged(event, this.networkId, '');
         },
         getWeb3() {
             return this.web3;

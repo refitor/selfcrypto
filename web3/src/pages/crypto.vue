@@ -1,4 +1,4 @@
-<!-- <style scoped>
+<style scoped>
 .layout {
     /* border: 1px solid #d7dde4; */
     position: relative;
@@ -27,29 +27,20 @@
                         <Button :disabled="(hasEncrypted === true)" @click="encrypt()" type="primary" style="margin: 10px;">Encrypt</Button>
                         <Button :disabled="(hasEncrypted === false)" @click="decrypt()" type="primary" style="margin: 10px;">Decrypt</Button>
                         <Button :disabled="(hasEncrypted === false)" @click="download()" type="primary" style="margin: 10px;">Download</Button>
-                        <Upload type="drag" :before-upload="onUploadBefore" action="/" style="margin-top: 10px; margin-bottom: 20px;">
+                        <Upload type="drag" :before-upload="onUploadBefore" action="/" style="margin-top: 10px;">
                             <div style="padding: 20px 0">
                                 <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
                                 <p>Click or drag the file here to upload</p>
                             </div>
                             <span v-if="fileName !== ''" style="color:green;">{{ fileName }}</span>
                         </Upload>
-                        <Editor ref="fileEditor"
-                        :content="content"
-                        :fontSize="14"
-                        :height="pageHeight() * 2 / 3"
-                        :width="pageWidth() / 2"
-                        :lang="lang"
-                        theme="chrome"
-                        :options="editorOptions"
-                        :readonly="readonly === 'true'"
-                        @init="editorInit"
-                        @onChange="editorChange"
-                        @onInput="editorInput"
-                        @onFocus="editorFocus"
-                        @onBlur="editorBlur"
-                        @onPaste="editorPaste"
-                        ></Editor>
+                        <Radio-group v-model="uploadType" style="margin-top: 10px; margin-bottom: 20px;">
+                            <Radio label="upload plain text"></Radio>
+                            <Radio label="upload cipher text"></Radio>
+                        </Radio-group>
+                        <div :style="{height: pageHeight() / 2 + 'px', width: pageWidth() / 2 + 'px'}">
+                            <vue-editor ref="fileEditor" v-model="content" :disabled="readonly === 'true'" :editor-toolbar="[['bold', 'italic', 'underline']]" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -57,31 +48,18 @@
     </div>
 </template>
 <script>
-import Editor from 'vue2x-ace-editor';
-import CryptJS from 'crypto-js';
+import { AES, enc } from 'crypto-js';
 import Web3 from "web3";
 export default {
-    components: {
-        Editor
-    },
     inject: ["reload"],
     data() {
         return {
             lang: 'text',
             content: '',
             readonly: false,
+            uploadType: 'upload plain text',
 
             fileName: '',
-
-            editorOptions: {
-                enableBasicAutocompletion: true,
-                enableSnippets: true,
-                enableLiveAutocompletion: true,
-                tabSize: 2,
-                fontSize: 16,
-                showPrintMargin: false
-            },
-
             web3Key: '',
             hasEncrypted: false
         }
@@ -96,6 +74,7 @@ export default {
             reader.onload = function () {
                 if (reader.result) {
                     self.content = reader.result;
+                    self.hasEncrypted = self.uploadType === 'upload plain text' ? false : true;
                 }
             }
             this.fileName = file.name;
@@ -112,14 +91,16 @@ export default {
         },
         encrypt() {
             let self = this;
-            let content = this.$refs.fileEditor.getValue();
+            let content = this.content;
             if (content === '') {
                 this.$Message.error('content must be non-empty');
                 return
             }
+            content = content.replace("<p>", "");
+            content = content.replace("</p>", "");
+            console.log('-----------', content)
 
-            var CryptoJS = require("crypto-js");
-            var web3Content = CryptoJS.AES.encrypt(content, self.web3Key).toString();
+            var web3Content = AES.encrypt(content, self.web3Key).toString();
             self.$parent.getSelf().switchPanel('encrypt', 'cryptoPanel', web3Content, function(encryptedContent) {
                 self.content = encryptedContent;
                 self.hasEncrypted = true;
@@ -128,38 +109,41 @@ export default {
         },
         decrypt() {
             let self = this;
-            let content = this.$refs.fileEditor.getValue();
+            let content = this.content;
             if (content === '') {
                 this.$Message.error('content must be non-empty');
                 return
             }
+            content = content.replace("<p>", "");
+            content = content.replace("</p>", "");
 
-            var CryptoJS = require("crypto-js");
             var encryptedContent = content;
             self.$parent.getSelf().switchPanel('decrypt', 'cryptoPanel', encryptedContent, function(deryptedContent) {
-                self.content = CryptoJS.AES.decrypt(deryptedContent, self.web3Key).toString(CryptoJS.enc.Utf8);
+                self.content = AES.decrypt(deryptedContent, self.web3Key).toString(enc.Utf8);
                 self.hasEncrypted = false;
                 console.log(encryptedContent, deryptedContent);
             })
         },
         download() {
-            let content = this.$refs.fileEditor.getValue();
+            let content = this.content;
             if (content === '') {
                 this.$Message.error('content must be non-empty');
                 return
             }
-            console.log('encryptKey:', this.encryptKey)
             // Create element with <a> tag
             const link = document.createElement("a");
 
             // Create a blog object with the file content which you want to add to the file
-            const file = new Blob([content], { type: 'text/plain' });
+            content = content.replace("<p>", "");
+            content = content.replace("</p>", "");
+            const blob = new Blob([content], { type: 'text/plain' });
+            const file = new File([blob], this.fileName);
 
             // Add file content in the object URL
             link.href = URL.createObjectURL(file);
 
             // Add file name
-            link.download = this.fileName === '' ? "selfcrypto.json" : this.fileName;
+            link.download = this.fileName === '' ? "selfcrypto.txt" : this.fileName;
 
             // Add click event to <a> tag to save file.
             link.click();
@@ -220,4 +204,4 @@ export default {
         }
     }
 }
-</script> -->
+</script>

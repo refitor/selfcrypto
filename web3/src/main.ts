@@ -22,8 +22,10 @@ import router from './router';
 // import VueI18n from 'vue-i18n';
 import cookie from 'vue-cookie';
 import axios from 'axios';
+import Vue2Editor from "vue2-editor";
 
 Vue.use(ViewUI);
+Vue.use(Vue2Editor);
 // Vue.use(VueI18n);
 // Vue.locale = () => {};
 Vue.config.productionTip = false

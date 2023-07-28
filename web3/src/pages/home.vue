@@ -26,6 +26,7 @@
                         <Button :disabled="hasRegisted" @click="modalMode = 'register'; popModal = true" type="primary" style="margin: 10px;">Regist</Button>
                         <Button :disabled ="!hasRegisted" @click="beforeRecover()" type="primary" style="margin: 10px;">Recover</Button>
                         <!-- <Button :disabled ="!hasRegisted || web3Key === ''" @click="logout()" type="primary" style="margin: 10px;">Logout</Button> -->
+                        <Button @click="executeAction('cryptoPanel', '')" type="primary" style="margin: 10px;">Encrypt-Decrypt</Button>
                         <!-- <Button :disabled ="!hasRegisted || web3Key === ''" @click="executeAction('cryptoPanel', '')" type="primary" style="margin: 10px;">Encrypt-Decrypt</Button> -->
                         <Table border style="margin-top: 8px;" no-data-text="empty key/value list" :columns="items.columns" :data="items.data"></Table>
                     </div>
@@ -140,9 +141,9 @@ export default {
             this.web3Key = web3Key;
             this.backendPublic = backendPublic;
             const contractAddr = this.$parent.getSelf().getWallet().contractAddrMap[this.$parent.getSelf().getWallet().networkId];
-            // this.addKV('Wallet', {'btnName': 'View', 'value': this.$parent.getSelf().getWalletAddress(), 'url': 'https://etherscan.io/token/' + this.$parent.getSelf().getWalletAddress()}, true);
-            // this.addKV('Contract', {'btnName': 'View', 'value': contractAddr, 'url': 'https://etherscan.io/token/' + contractAddr}, false);
-            this.addKV('Encrypt-Decrypt', {'value': this.$parent.getSelf().generatekey(16, false), 'btnName': 'Test'}, false);
+            this.addKV('Wallet', {'btnName': 'View', 'value': this.$parent.getSelf().getWalletAddress(), 'url': 'https://etherscan.io/token/' + this.$parent.getSelf().getWalletAddress()}, true);
+            this.addKV('Contract', {'btnName': 'View', 'value': contractAddr, 'url': 'https://etherscan.io/token/' + contractAddr}, false);
+            // this.addKV('Encrypt-Decrypt', {'value': this.$parent.getSelf().generatekey(16, false), 'btnName': 'Test'}, false);
             console.log('init privatePanel: ', web3Key, backendPublic);
         },
         addKV(k, v, bReset) {
@@ -298,7 +299,6 @@ export default {
         executeAction(name, params) {
             let self = this;
             if (name === 'Encrypt-Decrypt') {
-                // var CryptoJS = require("crypto-js");
                 if (this.hasEncrypted === false) {
                     var web3Content = CryptoJS.AES.encrypt(params, self.web3Key).toString();
                     self.$parent.getSelf().switchPanel('encrypt', '', web3Content, function(encryptedContent) {
@@ -314,7 +314,7 @@ export default {
                     })
                 }
             } else {
-                this.$parent.getSelf().afterVerify(true, params);
+                this.$parent.getSelf().afterVerify(true, params, name);
             }
         },
         showQRcode(totpKey) {

@@ -3,18 +3,21 @@
         <WalletPanel ref="walletPanel" :onAccountChanged="onAccountChanged" />
         <TOTPPanel v-if="showTOTP" ref="totpPanel" :getSelf="getSelf"/>
         <HomePanel v-show="showHomePanel && !showTOTP" ref="privatePanel" :getSelf="getSelf"/>
+        <CryptoPanel v-show="showPanels['cryptoPanel'] && !showTOTP" ref="cryptoPanel" :getSelf="getSelf"/>
     </div>
 </template>
 <script>
 import Web3 from "web3";
 import TOTPPanel from './totp.vue';
 import HomePanel from './home.vue';
+import CryptoPanel from './crypto.vue';
 import WalletPanel from './wallet.vue';
 export default {
     components: {
         TOTPPanel,
         WalletPanel,
         HomePanel,
+        CryptoPanel
     },
     inject: ["reload"],
     data() {
@@ -132,13 +135,15 @@ export default {
                 self.$refs.totpPanel.init(action, self.backendPublic, panelInitParam);
             });
         },
-        afterVerify(hasVerified, panelInitParam) {
+        afterVerify(hasVerified, panelInitParam, optionPanelName) {
             this.showTOTP = false;
             if (hasVerified === true) {
+                console.log('verify successed: ', this.panelName, optionPanelName);
                 if (this.afterVerifyFunc !== null && this.afterVerifyFunc !== undefined) {
                     this.afterVerifyFunc(panelInitParam);
                     return;
                 }
+                if (this.panelName === '' && optionPanelName !== undefined) this.panelName = optionPanelName;
                 this.showHomePanel = !this.showHomePanel;
                 this.showPanels[this.panelName] = true;
                 this.$refs[this.panelName].init(panelInitParam);
@@ -161,8 +166,8 @@ export default {
                 method,
                 params,
                 from,
-            }, function (err, result) {
-                if (err || result.error) {
+            }, function (error, result) {
+                if (error || result.error) {
                     self.$Message.error('sign message failed at web3: ', msg, error);
                     console.log('sign message failed at web3: ', msg, error)
                     return
