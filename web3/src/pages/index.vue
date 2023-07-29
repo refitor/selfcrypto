@@ -1,9 +1,12 @@
 <template>
     <div>
-        <WalletPanel ref="walletPanel" :onAccountChanged="onAccountChanged" />
-        <TOTPPanel v-if="showTOTP" ref="totpPanel" :getSelf="getSelf"/>
-        <HomePanel v-show="showHomePanel && !showTOTP" ref="privatePanel" :getSelf="getSelf"/>
-        <CryptoPanel v-show="showPanels['cryptoPanel'] && !showTOTP" ref="cryptoPanel" :getSelf="getSelf"/>
+        <div v-show="!showSpin">
+            <WalletPanel ref="walletPanel" :onAccountChanged="onAccountChanged" />
+            <TOTPPanel v-if="showTOTP" ref="totpPanel" :getSelf="getSelf"/>
+            <HomePanel v-show="showHomePanel && !showTOTP" ref="privatePanel" :getSelf="getSelf"/>
+            <CryptoPanel v-show="showPanels['cryptoPanel'] && !showTOTP" ref="cryptoPanel" :getSelf="getSelf"/>
+        </div>
+        <Spin size="large" fix v-if="showSpin"></Spin>
     </div>
 </template>
 <script>
@@ -38,16 +41,21 @@ export default {
 
             apiPrefix: '',
             loadRandom: '',
-            loadSignature: ''
+            loadSignature: '',
+            showSpin: false
         }
     },
     methods: {
         getSelf() {
             return this;
         },
+        enableSpin(status) {
+            this.showSpin = status;
+        },
         init() {
             let self = this;
             const go = new Go();
+            this.enableSpin(true);
             WebAssembly.instantiateStreaming(fetch("selfcrypto.wasm"), go.importObject)
             .then(function(result) {
                 console.log('load wasm successed: ', result)
@@ -109,8 +117,10 @@ export default {
                 let recoverID = Web3.utils.hexToAscii(result['recoverID']);
                 let backendKey = Web3.utils.hexToAscii(result['backendKey']);
                 initBackend(recoverID, backendKey, web3Key);
+                self.enableSpin(false);
             }, function (err) {
                 self.$Message.error('selfCrypto load from contract failed');
+                self.enableSpin(false);
                 initBackend('', '', '');
             });
         },
@@ -171,6 +181,7 @@ export default {
                 if (error || result.error) {
                     self.$Message.error('sign message failed at web3: ', msg, error);
                     console.log('sign message failed at web3: ', msg, error)
+                    self.enableSpin(false);
                     return
                 }
                 if (callback !== null && callback !== undefined) callback(result.result);
