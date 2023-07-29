@@ -24,8 +24,8 @@ export default {
             web3: null,
             networkId: '',
             contractAddrMap: {
-                '5': '0x8eD8bC11E8c2EB21Eb8C1507CD7F60B01cAD8f1E',
-                '5611': '0x065b48c674DF3CeD9cF0245Ede3aaF1641f93A65'
+                '5': '0x9375389f81bBaC6b7c1daC9C5c38F8373c48A301',
+                '5611': '0x49ea1cE733A0e99F990C8840b0f1AD5440B31B05'
             },
             contractABI: [
                 {

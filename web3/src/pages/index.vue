@@ -12,6 +12,7 @@ import TOTPPanel from './totp.vue';
 import HomePanel from './home.vue';
 import CryptoPanel from './crypto.vue';
 import WalletPanel from './wallet.vue';
+import { extractPublicKey } from '@metamask/eth-sig-util';
 export default {
     components: {
         TOTPPanel,
@@ -102,7 +103,7 @@ export default {
             loadParams.push(this.loadSignature);
             loadParams.push(Web3.utils.asciiToHex(this.loadRandom));
             self.$refs.walletPanel.Execute("call", "Load", self.walletAddress, 0, loadParams, function (result) {
-                console.log('-------------------------------+==', result)
+                console.log('selfcrypto load from contract successed: ', result)
                 self.$refs.privatePanel.hasRegisted = true;
                 let web3Key = Web3.utils.hexToAscii(result['web3Key']);
                 let recoverID = Web3.utils.hexToAscii(result['recoverID']);
@@ -176,7 +177,8 @@ export default {
             })
         },
         getPublic(msg, signature) {
-            return '0x042791d640dc87f1bf43075f6f205ffb5045adebcbd73b9942cf0a65f8970bbe80d7ffe21f66ea200636d54e927591766d9f53a785e40ef01ae9200332e15b651a';
+            const msgHash = Web3.utils.keccak256(this.$refs.walletPanel.getWeb3().eth.abi.encodeParameter("string", msg), {encoding:"hex"});
+            return extractPublicKey({'data': msgHash, 'signature': signature});
         },
         generatekey(num, needNO) {
             let library = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

@@ -149,33 +149,6 @@ export default {
             link.click();
             URL.revokeObjectURL(link.href);
         },
-        editorInit() {
-            require("brace/ext/language_tools");
-            require(`brace/mode/text`);
-            require(`brace/snippets/text`);
-            require(`brace/theme/chrome`);
-            
-            require('brace/mode/json')    //language
-            require('brace/mode/less')
-            require('brace/mode/yaml')
-            require('brace/snippets/json') //snippet
-        },
-        editorChange(editor) {
-            // console.log("changed", editor.getValue());
-        },
-        editorInput(editor) {
-            // this.content = editor.getValue();
-            // console.log("input", editor.getValue());
-        },
-        editorFocus(editor) {
-            // console.log("focus", editor);
-        },
-        editorBlur(editor) {
-            // console.log("blur", editor);
-        },
-        editorPaste(editor) {
-            // console.log("pase", editor);
-        },
         pageWidth(){
             var winWidth=0;
             if (window.innerWidth){

@@ -7,16 +7,14 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-// @title The SelfCrypto contract is used to provide decentralized key management services.
+// @title The selfweb3 contract is used to provide decentralized key management services.
 // @author refitor
-contract SelfCrypto is Ownable {
+contract selfweb3 is Ownable {
     using ECDSA for bytes32;
     using SafeMath for uint256;
     using Address for address payable;
     struct MetaData {
         address wallet;
-        address nftAddr;
-        uint256 storeFee;
         uint256 feeRate;
         uint256 registTotal;
     }
@@ -29,14 +27,13 @@ contract SelfCrypto is Ownable {
     mapping (address => StoreData) private _dataMap;
 
     /**
-     * @dev Reset is used to populate the meta information of the contract.
+     * @dev constructor is used to populate the meta information of the contract.
      * @param wallet the wallet address specified by the creator.
-     * @param nftAddr the NFT address specified by the creator.
-     * @param storeFee one-time storage fee for user registration.
      * @param feeRate fee deduction percentage set by the contract creator, demo: 500 / 10000, feeRate is 500.
      */
-    function Reset(address wallet, address nftAddr, uint256 storeFee, uint256 feeRate) external onlyOwner {
-        _set(wallet, nftAddr, storeFee, feeRate);
+    constructor(address wallet, uint256 feeRate) {
+        _metaData = MetaData(wallet, 0, 0);
+        _metaData.feeRate = feeRate;
     }
 
     /**
@@ -51,15 +48,6 @@ contract SelfCrypto is Ownable {
         require(web3Key.length != 0, "web3Key must be non-empty");
         require(recoverID.length != 0, "recoverID must be non-empty");
         require(backendKey.length != 0, "backendKey must be non-empty");
-        MetaData memory md = _get();
-        if (md.nftAddr != address(0)) {
-            require(IERC721(md.nftAddr).balanceOf(msg.sender) != 0, "illegal nft holder");
-        } else if (md.storeFee > 0 && md.feeRate > 0) {
-            require(msg.value > 0, "store fee must be greater than 0");
-            require(msg.value == md.storeFee, "invalid registration fee");
-            require(msg.value * md.feeRate / 10000 > 0, "invalid registration fee");
-            payable(md.wallet).sendValue(msg.value * md.feeRate / 10000);
-        }
         sd = StoreData(recoverID, web3Key, backendKey);
         _setKV(msg.sender, sd);
     }
@@ -79,9 +67,9 @@ contract SelfCrypto is Ownable {
     /**
      * @dev Meta is used to load the meta information of the contract.
      */
-    function Meta() view external returns (uint256 storeFee, address nftAddr, uint256 registTotal) {
+    function Meta() view external returns (uint256 feeRate, uint256 registTotal) {
         MetaData memory md = _get();
-        return (md.storeFee, md.nftAddr, md.registTotal);
+        return (md.feeRate, md.registTotal);
     }
 
     /**
@@ -112,21 +100,6 @@ contract SelfCrypto is Ownable {
      */
     function _getKV(address k) private view  returns (StoreData memory sd) {
         return _dataMap[k];
-    }
-
-    /**
-     * @dev _set is used to set _metaData.
-     * @param wallet the wallet address specified by the creator.
-     * @param nftAddr the NFT address specified by the creator.
-     * @param storeFee one-time storage fee for user registration.
-     * @param feeRate fee deduction percentage set by the contract creator, demo: 500 / 10000, feeRate is 500.
-     */
-    function _set(address wallet, address nftAddr, uint256 storeFee, uint256 feeRate) private {
-        _metaData = MetaData(wallet, nftAddr, 0, 0, 0);
-        if (nftAddr == address(0)) {
-            _metaData.storeFee = storeFee;
-            _metaData.feeRate = feeRate;
-        }
     }
 
     /**
