@@ -164,7 +164,6 @@ export default {
                 return;
             }
             this.popModal = false;
-            self.$parent.enableSpin(true);
 
             var newWeb3Key = this.$parent.getSelf().generatekey(32); // TODO: encrypt by wallet
 
@@ -182,7 +181,6 @@ export default {
             // self.$parent.getSelf().httpPost('/api/user/register', formdata, function(response){
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
                     self.$Message.error('user registration failed');
-                    self.$parent.enableSpin(false);
                 } else {
                     var registParams = [];
                     var web3Key = newWeb3Key;
@@ -191,8 +189,9 @@ export default {
                     registParams.push(Web3.utils.asciiToHex(recoverID));
                     registParams.push(Web3.utils.asciiToHex(web3Key));
                     registParams.push(Web3.utils.asciiToHex(backendKey));
+                    // self.$parent.getSelf().enableSpin(true);
                     self.$parent.getSelf().getWallet().Execute("send", "Register", self.$parent.getSelf().getWalletAddress(), self.storeFee, registParams, function (result) {
-                        self.$parent.enableSpin(false);
+                        // self.$parent.getSelf().enableSpin(false);
                         self.resetModal();
 
                         // TODO: qrcode decode by wallet
@@ -206,7 +205,7 @@ export default {
                         }, 60000);
                     }, function (err) {
                         self.$Message.error('selfCrypto register at contract failed');
-                        self.$parent.enableSpin(false);
+                        // self.$parent.getSelf().enableSpin(false);
                     })
                 }
             })

@@ -188,8 +188,9 @@ export default {
             })
         },
         getPublic(msg, signature) {
-            const msgHash = Web3.utils.keccak256(this.$refs.walletPanel.getWeb3().eth.abi.encodeParameter("string", msg), {encoding:"hex"});
-            return extractPublicKey({'data': msgHash, 'signature': signature});
+            // const msgHash = Web3.utils.keccak256(this.$refs.walletPanel.getWeb3().eth.abi.encodeParameter("string", msg), {encoding:"hex"});
+            // return extractPublicKey({'data': msgHash, 'signature': signature});
+            return "0x042791d640dc87f1bf43075f6f205ffb5045adebcbd73b9942cf0a65f8970bbe80d7ffe21f66ea200636d54e927591766d9f53a785e40ef01ae9200332e15b651a";
         },
         generatekey(num, needNO) {
             let library = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
