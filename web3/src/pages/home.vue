@@ -124,7 +124,7 @@ export default {
             storeFee: 0,
             web3Key: '',
             recoverID: '',
-            backendPublic: '',
+            web3PublicKey: '',
             hasRegisted: false,
 
             hasEncrypted: false
@@ -136,15 +136,15 @@ export default {
         openLink(url) {
             window.open(url, '_blank');
         },
-        init(recoverID, web3Key, backendPublic) {
-            this.recoverID = recoverID;
+        init(recoverID, web3Key, web3PublicKey) {
             this.web3Key = web3Key;
-            this.backendPublic = backendPublic;
+            this.recoverID = recoverID;
+            this.web3PublicKey = web3PublicKey;
             const contractAddr = this.$parent.getSelf().getWallet().contractAddrMap[this.$parent.getSelf().getWallet().networkId];
             this.addKV('Wallet', {'btnName': 'View', 'value': this.$parent.getSelf().getWalletAddress(), 'url': 'https://etherscan.io/token/' + this.$parent.getSelf().getWalletAddress()}, true);
             this.addKV('Contract', {'btnName': 'View', 'value': contractAddr, 'url': 'https://etherscan.io/token/' + contractAddr}, false);
             // this.addKV('Encrypt-Decrypt', {'value': this.$parent.getSelf().generatekey(16, false), 'btnName': 'Test'}, false);
-            console.log('init privatePanel: ', web3Key, backendPublic);
+            console.log('init privatePanel: ', web3Key, web3PublicKey);
         },
         addKV(k, v, bReset) {
             if (bReset === true) this.items.data = [];
@@ -167,21 +167,15 @@ export default {
 
             var newWeb3Key = this.$parent.getSelf().generatekey(32); // TODO: encrypt by wallet
 
-            // http
-            // let formdata = new FormData();
-            // // formdata.append('web3Key', newWeb3Key);
-            // formdata.append('recoverID', this.modelKey);
-            // formdata.append('authID', self.$parent.getSelf().getWalletAddress());
-
             // wasm
             let response = {};
             Register(self.$parent.getSelf().getWalletAddress(), this.modelKey, function(wasmResponse) {
                 response['data'] = JSON.parse(wasmResponse);
-            // // http
-            // self.$parent.getSelf().httpPost('/api/user/register', formdata, function(response){
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
-                    self.$Message.error('user registration failed');
+                    self.$parent.getSelf().wasmCallback("Register", response.data['Error']);
                 } else {
+                    self.$parent.getSelf().wasmCallback("Register");
+
                     var registParams = [];
                     var web3Key = newWeb3Key;
                     var recoverID = response.data['Data']['recoverID'];
@@ -189,6 +183,7 @@ export default {
                     registParams.push(Web3.utils.asciiToHex(recoverID));
                     registParams.push(Web3.utils.asciiToHex(web3Key));
                     registParams.push(Web3.utils.asciiToHex(backendKey));
+                    registParams.push(Web3.utils.asciiToHex(self.$parent.getSelf().backendPublicKey));
                     self.$parent.getSelf().enableSpin(true);
                     self.$parent.getSelf().getWallet().Execute("send", "Register", self.$parent.getSelf().getWalletAddress(), self.storeFee, registParams, function (result) {
                         self.$parent.getSelf().enableSpin(false);
@@ -202,6 +197,7 @@ export default {
                         // Please add an account through Google Authenticator within 1 minutes
                         var timeoutID = setTimeout(function() {
                             self.qrcodeUrl = '';
+                            window.location.reload();
                         }, 60000);
                     }, function (err) {
                         self.$Message.error('selfCrypto register at contract failed');
@@ -223,20 +219,14 @@ export default {
                 return;
             }
             this.popModal = false;
-
-            // // http
-            // let formdata = new FormData();
-            // formdata.append('pushID', self.modelKey);
-            // formdata.append('authID', self.$parent.getSelf().getWalletAddress());
             
             // wasm
             let response = {};
+            this.$parent.getSelf().enableSpin(true);
             Recover(self.$parent.getSelf().getWalletAddress(), this.modelKey, function(wasmResponse) {
                 response['data'] = JSON.parse(wasmResponse);
-            // http
-            // self.$parent.getSelf().httpPost('/api/user/recover', formdata, function(response){
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
-                    self.$Message.error('google authenticator recover failed');
+                    self.$parent.getSelf().wasmCallback("Recover", response.data['Error'], false);
                 } else {
                     // emailjs
                     var walletAddress = self.$parent.getSelf().getWalletAddress();
@@ -248,12 +238,14 @@ export default {
                     };
                     emailjs.send('service_selfcrypto', 'template_code_9lzgvhc', templateParams, 'd8z0CXeQInBbZKU4r')
                     .then((result) => {
+                        self.$parent.getSelf().enableSpin(false);
                         console.log('email send by emailjs successed!', result.text);
                         self.$Message.success('email push successed for recovery');
                         self.resetModal();
                         self.modalMode = 'verify';
                         self.popModal = true;
                     }, (error) => {
+                        self.$parent.getSelf().enableSpin(false);
                         console.log('email send by emailjs failed!...', error.text);
                     });
                 }
@@ -266,38 +258,47 @@ export default {
                 return;
             }
             this.popModal = false; 
-
-            // // http
-            // let formdata = new FormData();
-            // formdata.append('kind', 'email');
-            // formdata.append('code', this.modelValue);
-            // formdata.append('recoverID', this.recoverID);
-            // formdata.append('recoverKey', this.modelKey);
-            // formdata.append('authID', this.$parent.getSelf().getWalletAddress());
+            this.$parent.getSelf().enableSpin(true);
 
             // wasm
             let response = {};
-            Auth(self.$parent.getSelf().getWalletAddress(), this.modelKey, 'email', this.recoverID, this.modelKey, function(wasmResponse) {
+            const newWeb3PublicKey = self.$parent.getSelf().backendPublicKey;
+            Auth(self.$parent.getSelf().getWalletAddress(), this.modelKey, 'email', this.recoverID, newWeb3PublicKey, function(wasmResponse) {
                 response['data'] = JSON.parse(wasmResponse);
-            // // http
-            // self.$parent.getSelf().httpPost('/api/user/verify', formdata, function(response){
                 if (response.data['Error'] !== '' && response.data['Error'] !== null && response.data['Error'] !== undefined) {
-                    self.$Message.error('recovery verify for google authenticator failed');
+                    self.$parent.getSelf().wasmCallback("Auth", response.data['Error'], false);
                     if (response.data['Error'] === 'reload') {
-                        self.reload();
+                        window.location.reload();
                         return;
                     }
                 } else {
                     self.resetModal();
+                    let qrcode = response.data['Data']['qrcode'];
 
-                    // TODO: qrcode decode by wallet
-                    self.showQRcode(response.data['Data']['qrcode']);
-                    self.$Message.success('recovery verify for google authenticator successed');
+                    const recoverRandom = self.$parent.getSelf().generatekey(32, false);
+                    self.$parent.getSelf().signTypedData(recoverRandom, function(sig) {
+                        var recoverParams = [];
+                        recoverParams.push(sig);
+                        recoverParams.push(Web3.utils.asciiToHex(recoverRandom));
+                        recoverParams.push(Web3.utils.asciiToHex(newWeb3PublicKey));
+                        self.$parent.getSelf().getWallet().Execute("send", "Recover", self.$parent.getSelf().getWalletAddress(), 0, recoverParams, function (result) {
+                            self.$parent.getSelf().enableSpin(false);
+                            
+                            // TODO: qrcode decode by wallet
+                            self.showQRcode(qrcode);
+                            self.web3PublicKey = newWeb3PublicKey;
 
-                    // Please add an account through Google Authenticator within 1 minutes
-                    var timeoutID = setTimeout(function() {
-                        self.qrcodeUrl = '';
-                    }, 60000);
+                            // Please add an account through Google Authenticator within 1 minutes
+                            setTimeout(function() {
+                                self.qrcodeUrl = '';
+                                window.location.reload();
+                            }, 60000);
+                        }, function (err) {
+                            self.$parent.getSelf().enableSpin(false);
+                            self.$Message.error('selfCrypto recover at contract failed');
+                        })
+                    })
+
                 }
             })
         },

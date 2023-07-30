@@ -15,7 +15,6 @@ import TOTPPanel from './totp.vue';
 import HomePanel from './home.vue';
 import CryptoPanel from './crypto.vue';
 import WalletPanel from './wallet.vue';
-import { extractPublicKey } from '@metamask/eth-sig-util';
 export default {
     components: {
         TOTPPanel,
@@ -36,7 +35,7 @@ export default {
             showPanels: {},
 
             panelName: '',
-            backendPublic: '',
+            backendPublicKey: '',
             afterVerifyFunc: null,
 
             apiPrefix: '',
@@ -76,12 +75,6 @@ export default {
                 this.modelAuthID = address;
                 this.walletAddress = address;
                 this.init();
-                // this.loadRandom = this.generatekey(6, false);
-                // self.sign(Web3.utils.soliditySha3("\x19Ethereum Signed Message:\n32", this.loadRandom), function(sig) {
-                //     console.log('sign successed: ', sig)
-                //     self.loadSignature = sig;
-                //     self.load();
-                // })
             } else if (action === 'disconnect') {
                 this.connect = false;
                 this.walletAddress = '';
@@ -91,18 +84,19 @@ export default {
         },
         load() {
             let self = this;
-            let initBackend = function(recoverID, backendKey, web3Key) {
+            let initBackend = function(recoverID, backendKey, web3Key, web3PublicKey) {
                 // wasm
                 let response = {};
-                Load(self.walletAddress, self.getPublic(self.loadRandom, self.loadSignature), backendKey, function(wasmResponse) {
+                Load(self.walletAddress, web3PublicKey, backendKey, function(wasmResponse) {
                     response['data'] = JSON.parse(wasmResponse);
-                // // http
-                // self.httpGet('/api/user/load?authID=' + self.walletAddress + '&backendKey=' + backendKey, function(response) {
                     if (response.data['Data'] !== null && response.data['Data'] !== undefined && response.data['Data'] !== {}) {
-                        self.backendPublic = response.data['Data'];
-                        self.$refs.privatePanel.init(recoverID, web3Key, self.backendPublic);
+                        // self.wasmCallback("Load", '', false);
+                        self.enableSpin(false);
+                        self.backendPublicKey = response.data['Data'];
+                        console.log('selfcrypto load from backend successed: ', response.data['Data']);
+                        self.$refs.privatePanel.init(recoverID, web3Key, web3PublicKey);
                     } else {
-                        self.$Message.error('selfcrypto load from backend failed: ', + response.data['Data']);
+                        self.wasmCallback("Load", response.data['Error'], false);
                     }
                 });
             }
@@ -111,17 +105,16 @@ export default {
             loadParams.push(this.loadSignature);
             loadParams.push(Web3.utils.asciiToHex(this.loadRandom));
             self.$refs.walletPanel.Execute("call", "Load", self.walletAddress, 0, loadParams, function (result) {
-                console.log('selfcrypto load from contract successed: ', result)
+                console.log('selfcrypto load from contract successed: ', result);
                 self.$refs.privatePanel.hasRegisted = true;
                 let web3Key = Web3.utils.hexToAscii(result['web3Key']);
                 let recoverID = Web3.utils.hexToAscii(result['recoverID']);
                 let backendKey = Web3.utils.hexToAscii(result['backendKey']);
-                initBackend(recoverID, backendKey, web3Key);
-                self.enableSpin(false);
+                let web3PublicKey = Web3.utils.hexToAscii(result['web3PublicKey']);
+                initBackend(recoverID, backendKey, web3Key, web3PublicKey);
             }, function (err) {
                 self.$Message.error('selfCrypto load from contract failed');
-                self.enableSpin(false);
-                initBackend('', '', '');
+                initBackend('', '', '', '');
             });
         },
         getWalletAddress() {
@@ -143,7 +136,7 @@ export default {
             let self = this;
             this.showTOTP = true;
             this.$nextTick(function(){
-                self.$refs.totpPanel.init(action, self.backendPublic, panelInitParam);
+                self.$refs.totpPanel.init(action, self.backendPublicKey, panelInitParam);
             });
         },
         afterVerify(hasVerified, panelInitParam, optionPanelName) {
@@ -187,11 +180,6 @@ export default {
                 if (callback !== null && callback !== undefined) callback(result.result);
             })
         },
-        getPublic(msg, signature) {
-            // const msgHash = Web3.utils.keccak256(this.$refs.walletPanel.getWeb3().eth.abi.encodeParameter("string", msg), {encoding:"hex"});
-            // return extractPublicKey({'data': msgHash, 'signature': signature});
-            return "0x042791d640dc87f1bf43075f6f205ffb5045adebcbd73b9942cf0a65f8970bbe80d7ffe21f66ea200636d54e927591766d9f53a785e40ef01ae9200332e15b651a";
-        },
         generatekey(num, needNO) {
             let library = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             if (needNO === true) library = "0123456789";
@@ -201,6 +189,15 @@ export default {
                 key += library.substring(randomPoz, randomPoz + 1);
             }
             return key;
+        },
+        wasmCallback(method, err, spinStatus) {
+            if (spinStatus !== undefined) this.enableSpin(spinStatus);
+            if (err === undefined || err === '') {
+                this.$Message.success('exec wasm method successed: ' + method);                
+            } else {
+                console.log('exec wasm method failed: ', method + ", ", err);
+                this.$Message.error('exec wasm method failed: ' + method + ", " + err);    
+            }
         },
         httpGet(url, onResponse, onPanic) {
             this.$axios.get(this.apiPrefix + url)

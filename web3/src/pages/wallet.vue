@@ -24,10 +24,45 @@ export default {
             web3: null,
             networkId: '',
             contractAddrMap: {
-                '5': '0x9375389f81bBaC6b7c1daC9C5c38F8373c48A301',
-                '5611': '0x49ea1cE733A0e99F990C8840b0f1AD5440B31B05'
+                '5': '0x5e2200656e30d04c936fc0af995E6c51F6EAA96B',
+                '5611': '0x304eBa9f694f5a44Ddaa48aa4481Bf08AB0bE09B'
             },
             contractABI: [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "wallet",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "feeRate",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "previousOwner",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "newOwner",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "OwnershipTransferred",
+                    "type": "event"
+                },
                 {
                     "inputs": [
                         {
@@ -57,9 +92,55 @@ export default {
                             "internalType": "bytes",
                             "name": "backendKey",
                             "type": "bytes"
+                        },
+                        {
+                            "internalType": "bytes",
+                            "name": "web3PublicKey",
+                            "type": "bytes"
                         }
                     ],
                     "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "Meta",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "feeRate",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "registTotal",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "bytes",
+                            "name": "signature",
+                            "type": "bytes"
+                        },
+                        {
+                            "internalType": "bytes",
+                            "name": "message",
+                            "type": "bytes"
+                        },
+                        {
+                            "internalType": "bytes",
+                            "name": "web3PublicKey",
+                            "type": "bytes"
+                        }
+                    ],
+                    "name": "Recover",
+                    "outputs": [],
+                    "stateMutability": "payable",
                     "type": "function"
                 },
                 {
@@ -78,6 +159,11 @@ export default {
                             "internalType": "bytes",
                             "name": "backendKey",
                             "type": "bytes"
+                        },
+                        {
+                            "internalType": "bytes",
+                            "name": "web3PublicKey",
+                            "type": "bytes"
                         }
                     ],
                     "name": "Register",
@@ -87,25 +173,35 @@ export default {
                 },
                 {
                     "inputs": [],
-                    "name": "Meta",
+                    "name": "owner",
                     "outputs": [
                         {
-                            "internalType": "uint256",
-                            "name": "storeFee",
-                            "type": "uint256"
-                        },
-                        {
                             "internalType": "address",
-                            "name": "nftAddr",
+                            "name": "",
                             "type": "address"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "registTotal",
-                            "type": "uint256"
                         }
                     ],
                     "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "renounceOwnership",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "newOwner",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "transferOwnership",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
                     "type": "function"
                 }
             ]
@@ -143,7 +239,6 @@ export default {
                 this.$parent.onAccountChanged('connect', this.networkId, walletAddress);
 
                 // Subscribe to accounts change
-                console.log(account['connector'].onAccountsChanged)
                 account['connector'].on("change", (eventParam) => {
                     console.log("event change: ", eventParam);
                     self.web3Reload('change');

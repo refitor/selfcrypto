@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha1"
 	"encoding/base32"
 	"encoding/binary"
@@ -16,7 +17,6 @@ import (
 
 	"selfcrypto/common/rscrypto"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/ecies"
 	"github.com/refitor/rslog"
@@ -54,34 +54,30 @@ func GetAuthUser(authID, web3Public, backendKey string) (*AuthUser, error) {
 			}
 			user.SelfPrivate = selfPrivateKey
 		}
+		rslog.Debug(hex.EncodeToString(crypto.CompressPubkey(vserver.public)))
 
 		// specify the private public key
 		if c_public_hex != "" {
 			web3Public = c_public_hex
 		}
+		if web3Public == "" {
+			web3Public = hex.EncodeToString(crypto.CompressPubkey(vserver.public))
+		}
 
 		// walletPublic: handle for Web3Public
 		if web3Public != "" {
-			// parse publicKey from hex format
-			if !strings.HasPrefix(web3Public, "0x04") {
-				web3Public = "0x04" + web3Public
-			}
-			pubBuf, err := hexutil.Decode(web3Public)
+			publicKey, err := user.getPublicKey(web3Public)
 			if err != nil {
-				return nil, fmt.Errorf("getAuthUser failed at hexutil.Decode, detail: %s", err.Error())
-			}
-			// publicKey, err := crypto.DecompressPubkey(pubBuf)
-			publicKey, err := crypto.UnmarshalPubkey(pubBuf)
-			if err != nil {
-				return nil, fmt.Errorf("getAuthUser failed at crypto.UnmarshalPubkey, detail: %s", err.Error())
+				return nil, fmt.Errorf("getAuthUser failed at user.getPublicKey, detail: %s", err.Error())
 			}
 			user.Web3Public = publicKey
+
+			strPublic := hex.EncodeToString(crypto.CompressPubkey(user.Web3Public))
+			rslog.Debugf("register user successed, %s, %s, %+v", web3Public, strPublic, user)
 		}
-		strPublic := hex.EncodeToString(crypto.CompressPubkey(user.Web3Public))
-		rslog.Debugf("register user successed, %s, %s, %+v", web3Public, strPublic, user)
 
 		// save to cache
-		vserver.SetCacheByTime(c_name_user+"-"+authID, user, true, 900, func(s string) bool {
+		vserver.SetCacheByTime(c_name_user+"-"+authID, user, true, 0, func(s string) bool {
 			rslog.Infof("before delete user at memory, authID: %s", authID)
 			if memUser, ok := vserver.GetCache(s, false, nil).(*AuthUser); ok && memUser != nil && time.Since(memUser.ActiveTime).Seconds() < 900 {
 				return false
@@ -131,7 +127,7 @@ func (p *AuthUser) Init(authID, recoverID string, privateKey *ecdsa.PrivateKey) 
 	return base32.StdEncoding.EncodeToString(recoverIDBuf), selfPrivate3, nil
 }
 
-func (p *AuthUser) Reset(authID, pushID, recoverID string) (*AuthUser, error) {
+func (p *AuthUser) Reset(authID, pushID, recoverID, web3Public string) (*AuthUser, error) {
 	// // decrypt recoverID by backendKey and verify pushID
 	// backendKey, err := p.getKey(p.Web3Public, nil)
 	// if err != nil {
@@ -143,16 +139,21 @@ func (p *AuthUser) Reset(authID, pushID, recoverID string) (*AuthUser, error) {
 		return nil, fmt.Errorf("invalid pushID for recovery, pushID: %s, recoverID: %s", pushID, decryptedRecoverID)
 	}
 
+	web3PublicKey, err := p.getPublicKey(web3Public)
+	if err != nil {
+		return nil, fmt.Errorf("getAuthUser failed at user.getPublicKey, detail: %s", err.Error())
+	}
+
 	// reset AuthUser
 	resetUser := new(AuthUser)
 	resetUser.ActiveTime = p.ActiveTime
-	resetUser.Web3Public = p.Web3Public
+	resetUser.Web3Public = web3PublicKey
 	if _, _, err := resetUser.Init(authID, decryptedRecoverID, p.SelfPrivate); err != nil {
 		return nil, err
 	}
 
 	// cache for user
-	vserver.SetCacheByTime(c_name_user+"-"+authID, resetUser, true, 900, func(s string) bool {
+	vserver.SetCacheByTime(c_name_user+"-"+authID, resetUser, true, 0, func(s string) bool {
 		rslog.Infof("before delete user at memory, authID: %s", authID)
 		if memUser, ok := vserver.GetCache(s, false, nil).(*AuthUser); ok && memUser != nil && time.Since(memUser.ActiveTime).Seconds() < 900 {
 			return false
@@ -176,14 +177,14 @@ func (p *AuthUser) HandleCrypto(action, content string) (ret string, retErr erro
 		if err != nil {
 			return "", err
 		}
-		pubKey, err := p.getKey(p.Web3Public, nil)
+		keyBuf, err := ecies.Encrypt(rand.Reader, ecies.ImportECDSAPublic(&p.SelfPrivate.PublicKey), []byte(key), nil, nil)
 		if err != nil {
 			return "", err
 		}
 
 		// [][]byte to json
 		ebuf := make([][]byte, 0)
-		ebuf = append(ebuf, rscrypto.AesEncryptECB(crypto.CompressPubkey(vserver.public), []byte(pubKey)))
+		ebuf = append(ebuf, keyBuf)
 		ebuf = append(ebuf, rscrypto.AesEncryptECB([]byte(content), []byte(key)))
 		ebufJson, err := json.Marshal(ebuf)
 		if err != nil {
@@ -198,10 +199,6 @@ func (p *AuthUser) HandleCrypto(action, content string) (ret string, retErr erro
 		if err != nil {
 			return "", fmt.Errorf("decrypt failed at hex.DecodeString, detail: %s", err.Error())
 		}
-		pubKey, err := p.getKey(p.Web3Public, nil)
-		if err != nil {
-			return "", err
-		}
 
 		// json to [][]byte
 		ebuf := make([][]byte, 0)
@@ -213,8 +210,7 @@ func (p *AuthUser) HandleCrypto(action, content string) (ret string, retErr erro
 		}
 
 		// generate key
-		vpublic, _ := crypto.DecompressPubkey(rscrypto.AesDecryptECB(ebuf[0], []byte(pubKey)))
-		key, err := p.getKey(vpublic, nil)
+		key, err := ecies.ImportECDSA(p.SelfPrivate).Decrypt(ebuf[0], nil, nil)
 		if err != nil {
 			return "", err
 		}
@@ -228,6 +224,24 @@ func (p *AuthUser) HandleCrypto(action, content string) (ret string, retErr erro
 
 func (p *AuthUser) GetQrcode(authID string) (string, error) {
 	return p.getKey(p.Web3Public, nil)
+}
+
+func (p *AuthUser) getPublicKey(key string) (*ecdsa.PublicKey, error) {
+	// parse publicKey from hex format
+	rslog.Debugf("getPublicKey, key: %s", key)
+	// if !strings.HasPrefix(web3Public, "0x04") {
+	// 	web3Public = "0x04" + web3Public
+	// }
+	pubBuf, err := hex.DecodeString(key)
+	if err != nil {
+		return nil, fmt.Errorf("getPublicKey failed at hex.Decode, detail: %s", err.Error())
+	}
+	publicKey, err := crypto.DecompressPubkey(pubBuf)
+	// publicKey, err := crypto.UnmarshalPubkey(pubBuf)
+	if err != nil {
+		return nil, fmt.Errorf("getPublicKey failed at crypto.DecompressPubkey, detail: %s", err.Error())
+	}
+	return publicKey, nil
 }
 
 func (p *AuthUser) getKey(publicKey *ecdsa.PublicKey, privateKey *ecdsa.PrivateKey) (string, error) {

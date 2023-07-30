@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -9,7 +10,6 @@ import (
 
 	"selfcrypto/common/rsauth"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/refitor/rslog"
 )
@@ -37,19 +37,19 @@ func wasmResponse(data any, err string) *Response {
 
 // @request authID wallet address
 // @response backendPublic backend public key
-// @response walletPublic wallet account public key
+// @response web3Public wallet account public key
 func Load(datas ...string) *Response {
-	if len(datas) < 3 || datas[0] == "" || datas[1] == "" {
+	if len(datas) < 3 || datas[0] == "" {
 		return wasmResponse(nil, c_Error_InvalidParams)
 	}
-	authID, walletPublic, backendKey := datas[0], datas[1], datas[2]
+	authID, web3Public, backendKey := datas[0], datas[1], datas[2]
 
 	// cache backendKey
-	_, err := GetAuthUser(authID, walletPublic, backendKey)
+	_, err := GetAuthUser(authID, web3Public, backendKey)
 	if err != nil {
 		return wasmResponse(nil, WebError(err, ""))
 	}
-	return wasmResponse(hexutil.Encode(crypto.FromECDSAPub(vserver.public))[4:], "")
+	return wasmResponse(hex.EncodeToString(crypto.CompressPubkey(vserver.public)), "")
 }
 
 // @request authID: wallet address
@@ -170,7 +170,7 @@ func Auth(datas ...string) *Response {
 		}
 
 		pushID := fmt.Sprintf("%v", vserver.GetCache("pushID-"+authID, true, nil))
-		resetUser, err := auser.Reset(authID, pushID, authParams1) //, authParams2)
+		resetUser, err := auser.Reset(authID, pushID, authParams1, authParams2)
 		if err != nil {
 			return wasmResponse(nil, WebError(err, ""))
 		}

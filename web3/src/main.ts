@@ -36,7 +36,7 @@ axios.defaults.withCredentials = false;
 Vue.prototype.$axios = axios;
 
 // ignore console.log
-console.log = ()=>{}
+// console.log = ()=>{}
 
 // const i18n = new VueI18n({
 //     locale: 'en-US',    // 语言标识, 通过切换locale的值来实现语言切换,this.$i18n.locale 
